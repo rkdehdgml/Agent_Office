@@ -50,6 +50,14 @@ wss.on("connection", (socket) => {
   for (const event of store.getHistory()) {
     socket.send(JSON.stringify(event));
   }
+
+  socket.on("error", (err) => {
+    console.error("[ws socket error]", err);
+  });
+});
+
+wss.on("error", (err) => {
+  console.error("[ws server error]", err);
 });
 
 wss.on("listening", () => {
