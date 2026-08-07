@@ -1,0 +1,11 @@
+{
+  "name": "agent-office",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "concurrently -n server,ui -c blue,green \"npm --prefix server run dev\" \"npm --prefix ui run dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
