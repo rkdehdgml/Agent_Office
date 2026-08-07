@@ -6,7 +6,7 @@
 
 **Architecture:** Claude Code HTTP hooks POST every lifecycle event to an Express server on port 4000. The server timestamps and stores the last 200 events in memory, then broadcasts them over a WebSocket server on port 4001. The React UI (Vite) connects to the WebSocket, replays history on connect, and reduces the event stream into an "office state" (rooms keyed by `agent_type`, characters keyed by `agent_id`) that drives the visuals.
 
-**Tech Stack:** TypeScript throughout. `server/`: Express + `ws`, run via `tsx` (no build step). `ui/`: Vite + React + TypeScript. Root: `concurrently` to run both with one command. No test framework — verification is via `curl` and manual browser checks, per the spec's explicit choice.
+**Tech Stack:** TypeScript throughout. `server/`: Express + `ws`, run via `tsx` (no build step). `ui/`: Vite + React + TypeScript. Root: `concurrently` to run both with one command. No test framework for the server or UI rendering — verification is via `curl` and manual browser checks, per the spec's explicit choice — except `ui/src/officeReducer.ts`, which gets a small `vitest` unit suite.
 
 ## Global Constraints
 
@@ -17,8 +17,9 @@
 - Hook `timeout`: `5` (seconds), `matcher` omitted (matches everything), for these events: `SessionStart`, `SessionEnd`, `UserPromptSubmit`, `Stop`, `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `SubagentStart`, `SubagentStop`.
 - Character identity = `agent_id`. Room grouping = `agent_type` (missing → room `"본부"`).
 - UI must never crash on unknown `hook_event_name` or missing fields — ignore/default defensively.
-- No automated test suite (per spec). Verify each task with `curl` and/or a browser check as specified in that task's steps.
-- **No git repository** — this project is not under version control. Do **not** run `git init`, `git add`, or `git commit` at any point in this plan. Skip any "commit" step entirely.
+- No automated test suite for the server or the UI's rendered output — verify those with `curl` and/or a browser check as specified in that task's steps (per spec, this is an intentional scope choice for a personal local tool).
+- Exception: `ui/src/officeReducer.ts` (the core event→state mapping logic) gets a small `vitest` unit test suite (`ui/src/officeReducer.test.ts`), since it's pure, high-value-to-verify logic. This is the only automated test file in the project — do not add tests elsewhere.
+- A local git repository was initialized specifically to support this plan's subagent-driven execution (task-scoped commits, diffs, and rollback). Commit at the end of each task as usual. There is no remote — never push.
 - Ports are fixed: server HTTP `4000`, server WS `4001`, UI dev server `5173` (Vite default).
 
 ---
@@ -340,6 +341,7 @@ Kill the process started in Step 6.
 - Create: `ui/index.html`
 - Create: `ui/src/types.ts`
 - Create: `ui/src/officeReducer.ts`
+- Create: `ui/src/officeReducer.test.ts`
 - Create: `ui/src/useEventSocket.ts`
 - Create: `ui/src/main.tsx`
 - Create: `ui/src/App.tsx`
@@ -362,7 +364,8 @@ Kill the process started in Step 6.
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -373,7 +376,8 @@ Kill the process started in Step 6.
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
     "typescript": "^5.5.4",
-    "vite": "^5.4.0"
+    "vite": "^5.4.0",
+    "vitest": "^2.0.5"
   }
 }
 ```
@@ -740,12 +744,89 @@ Expected: the `<pre>` JSON dump shows `rooms["research-dept"].characters["a1"].s
 
 Kill both background processes started in Step 12.
 
+- [ ] **Step 15: Create `ui/src/officeReducer.test.ts`**
+
+```ts
+import { describe, expect, it } from "vitest";
+import { applyEvent, initialOfficeState, HQ_ROOM } from "./officeReducer";
+import type { RawEvent } from "./types";
+
+describe("applyEvent", () => {
+  it("creates a room and character on SubagentStart", () => {
+    const event: RawEvent = { hook_event_name: "SubagentStart", agent_id: "a1", agent_type: "research-dept" };
+    const state = applyEvent(initialOfficeState(), event);
+    const character = state.rooms["research-dept"].characters["a1"];
+    expect(character.status).toBe("출근");
+    expect(character.active).toBe(true);
+  });
+
+  it("maps PreToolUse tool_name to the correct status", () => {
+    let state = applyEvent(initialOfficeState(), {
+      hook_event_name: "SubagentStart",
+      agent_id: "a1",
+      agent_type: "research-dept",
+    });
+    state = applyEvent(state, {
+      hook_event_name: "PreToolUse",
+      agent_id: "a1",
+      agent_type: "research-dept",
+      tool_name: "Read",
+    });
+    expect(state.rooms["research-dept"].characters["a1"].status).toBe("자료 찾는 중 🔍");
+  });
+
+  it("falls back to '작업 중' for an unmapped tool_name", () => {
+    const state = applyEvent(initialOfficeState(), {
+      hook_event_name: "PreToolUse",
+      agent_id: "a1",
+      agent_type: "research-dept",
+      tool_name: "SomeOtherTool",
+    });
+    expect(state.rooms["research-dept"].characters["a1"].status).toBe("작업 중");
+  });
+
+  it("routes events without agent_type to the HQ room", () => {
+    const state = applyEvent(initialOfficeState(), { hook_event_name: "UserPromptSubmit" });
+    expect(state.rooms[HQ_ROOM].characters[HQ_ROOM].status).toBe("지시 접수 📨");
+  });
+
+  it("marks the character inactive on SubagentStop", () => {
+    let state = applyEvent(initialOfficeState(), {
+      hook_event_name: "SubagentStart",
+      agent_id: "a1",
+      agent_type: "dev-dept",
+    });
+    state = applyEvent(state, { hook_event_name: "SubagentStop", agent_id: "a1", agent_type: "dev-dept" });
+    const character = state.rooms["dev-dept"].characters["a1"];
+    expect(character.status).toBe("퇴근");
+    expect(character.active).toBe(false);
+  });
+
+  it("ignores an unknown hook_event_name for state but still logs it", () => {
+    const state = applyEvent(initialOfficeState(), { hook_event_name: "SomeFutureEvent", agent_type: "dev-dept" });
+    expect(state.rooms["dev-dept"]).toBeUndefined();
+    expect(state.log).toHaveLength(1);
+    expect(state.log[0].hookEventName).toBe("SomeFutureEvent");
+  });
+
+  it("does not throw when agent_id, agent_type, and hook_event_name are all missing", () => {
+    expect(() => applyEvent(initialOfficeState(), {})).not.toThrow();
+  });
+});
+```
+
+- [ ] **Step 16: Run the reducer test suite**
+
+Run: `npm --prefix ui run test`
+Expected: all 7 tests pass, exit code 0.
+
 ---
 
 ### Task 4: Office Visuals (rooms, pixel characters, event log panel)
 
 **Files:**
 - Modify: `ui/src/officeReducer.ts` (add internal revert-status support)
+- Modify: `ui/src/officeReducer.test.ts` (cover the new revert behavior)
 - Create: `ui/src/App.css`
 - Create: `ui/src/components/Character.tsx`
 - Create: `ui/src/components/Room.tsx`
@@ -1088,6 +1169,63 @@ Expected throughout: the event log panel at the bottom lists all four events in 
 - [ ] **Step 10: Stop the background processes**
 
 Kill both background processes started in Step 8.
+
+- [ ] **Step 11: Extend `ui/src/officeReducer.test.ts` to cover the revert behavior added in Step 1**
+
+Add these two test cases inside the existing `describe("applyEvent", ...)` block (append after the last `it(...)`):
+
+```ts
+  it("reverts '완료 ✅' back to the previous status via the internal revert event", () => {
+    let state = applyEvent(initialOfficeState(), {
+      hook_event_name: "SubagentStart",
+      agent_id: "a1",
+      agent_type: "research-dept",
+    });
+    state = applyEvent(state, {
+      hook_event_name: "PreToolUse",
+      agent_id: "a1",
+      agent_type: "research-dept",
+      tool_name: "Read",
+    });
+    state = applyEvent(state, {
+      hook_event_name: "PostToolUse",
+      agent_id: "a1",
+      agent_type: "research-dept",
+      tool_name: "Read",
+    });
+    expect(state.rooms["research-dept"].characters["a1"].status).toBe("완료 ✅");
+
+    state = applyEvent(state, revertStatusEvent("research-dept", "a1"));
+    expect(state.rooms["research-dept"].characters["a1"].status).toBe("자료 찾는 중 🔍");
+  });
+
+  it("does not add a log entry for the internal revert event", () => {
+    let state = applyEvent(initialOfficeState(), {
+      hook_event_name: "SubagentStart",
+      agent_id: "a1",
+      agent_type: "research-dept",
+    });
+    const logCountBefore = state.log.length;
+    state = applyEvent(state, revertStatusEvent("research-dept", "a1"));
+    expect(state.log).toHaveLength(logCountBefore);
+  });
+```
+
+Add the import at the top of the file, alongside the existing imports:
+
+```ts
+import { applyEvent, initialOfficeState, HQ_ROOM, revertStatusEvent } from "./officeReducer";
+```
+
+(This replaces the existing import line from Task 3, which did not import `revertStatusEvent`.)
+
+- [ ] **Step 12: Run the full test suite and type-check again**
+
+Run: `npm --prefix ui run test`
+Expected: all 9 tests pass, exit code 0.
+
+Run: `npx --prefix ui tsc --noEmit`
+Expected: no output, exit code 0.
 
 ---
 
