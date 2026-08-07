@@ -182,9 +182,16 @@ function broadcast(event: unknown) {
 
 wss.on("connection", (socket) => {
   console.log("WS client connected, sending history");
+  socket.on("error", (err) => {
+    console.error("WS client socket error:", err);
+  });
   for (const event of store.getHistory()) {
     socket.send(JSON.stringify(event));
   }
+});
+
+wss.on("error", (err) => {
+  console.error("WebSocketServer error:", err);
 });
 
 wss.on("listening", () => {
