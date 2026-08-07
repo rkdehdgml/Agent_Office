@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyEvent, initialOfficeState, HQ_ROOM } from "./officeReducer";
+import { applyEvent, initialOfficeState, HQ_ROOM, revertStatusEvent } from "./officeReducer";
 import type { RawEvent } from "./types";
 
 describe("applyEvent", () => {
@@ -62,5 +62,40 @@ describe("applyEvent", () => {
 
   it("does not throw when agent_id, agent_type, and hook_event_name are all missing", () => {
     expect(() => applyEvent(initialOfficeState(), {})).not.toThrow();
+  });
+
+  it("reverts '완료 ✅' back to the previous status via the internal revert event", () => {
+    let state = applyEvent(initialOfficeState(), {
+      hook_event_name: "SubagentStart",
+      agent_id: "a1",
+      agent_type: "research-dept",
+    });
+    state = applyEvent(state, {
+      hook_event_name: "PreToolUse",
+      agent_id: "a1",
+      agent_type: "research-dept",
+      tool_name: "Read",
+    });
+    state = applyEvent(state, {
+      hook_event_name: "PostToolUse",
+      agent_id: "a1",
+      agent_type: "research-dept",
+      tool_name: "Read",
+    });
+    expect(state.rooms["research-dept"].characters["a1"].status).toBe("완료 ✅");
+
+    state = applyEvent(state, revertStatusEvent("research-dept", "a1"));
+    expect(state.rooms["research-dept"].characters["a1"].status).toBe("자료 찾는 중 🔍");
+  });
+
+  it("does not add a log entry for the internal revert event", () => {
+    let state = applyEvent(initialOfficeState(), {
+      hook_event_name: "SubagentStart",
+      agent_id: "a1",
+      agent_type: "research-dept",
+    });
+    const logCountBefore = state.log.length;
+    state = applyEvent(state, revertStatusEvent("research-dept", "a1"));
+    expect(state.log).toHaveLength(logCountBefore);
   });
 });

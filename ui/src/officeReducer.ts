@@ -97,7 +97,7 @@ export function applyEvent(state: OfficeState, event: RawEvent): OfficeState {
   const toolName = event.tool_name ?? "";
 
   let next = state;
-  if (name) {
+  if (name && !name.startsWith("__")) {
     const log: LogEntry = {
       id: `${event.receivedAt ?? Date.now()}-${Math.random().toString(36).slice(2)}`,
       receivedAt: event.receivedAt ?? Date.now(),
@@ -160,6 +160,10 @@ export function applyEvent(state: OfficeState, event: RawEvent): OfficeState {
         previousStatus: "업무 종료",
         active: true,
       }));
+    case "__revertStatus":
+      return updateCharacter(next, agentType, agentId, (c) =>
+        c.status === "완료 ✅" ? { ...c, status: c.previousStatus } : c
+      );
     default:
       return next;
   }
@@ -167,4 +171,8 @@ export function applyEvent(state: OfficeState, event: RawEvent): OfficeState {
 
 export function initialOfficeState(): OfficeState {
   return { rooms: {}, log: [] };
+}
+
+export function revertStatusEvent(agentType: string, agentId: string): RawEvent {
+  return { hook_event_name: "__revertStatus", agent_type: agentType, agent_id: agentId };
 }
