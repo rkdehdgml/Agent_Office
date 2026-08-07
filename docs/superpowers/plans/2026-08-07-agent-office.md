@@ -14,7 +14,7 @@
 - WebSocket server: `ws://localhost:4001`.
 - In-memory history: last **200** events only, no disk persistence.
 - New WS clients receive the full history immediately on connect.
-- Hook `timeout`: `5` (seconds), `matcher` omitted (matches everything), for these events: `SessionStart`, `SessionEnd`, `UserPromptSubmit`, `Stop`, `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `SubagentStart`, `SubagentStop`.
+- Hook `timeout`: `5` (seconds), `matcher` omitted (matches everything), for these events: `SessionStart`, `SessionEnd`, `UserPromptSubmit`, `Stop`, `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `SubagentStart`, `SubagentStop`. Exception: the installed Claude Code CLI (2.1.224) does not deliver `http`-type hooks for `SessionStart` — that one event uses `type: "command"` with a `curl` call posting the same stdin JSON to the same URL, verified working in Task 2. All other 8 events use `type: "http"` as originally specified.
 - Character identity = `agent_id`. Room grouping = `agent_type` (missing → room `"본부"`).
 - UI must never crash on unknown `hook_event_name` or missing fields — ignore/default defensively.
 - No automated test suite for the server or the UI's rendered output — verify those with `curl` and/or a browser check as specified in that task's steps (per spec, this is an intentional scope choice for a personal local tool).
@@ -249,7 +249,7 @@ Expected: process exits; no further log lines.
 {
   "hooks": {
     "SessionStart": [
-      { "hooks": [ { "type": "http", "url": "http://localhost:4000/events", "timeout": 5 } ] }
+      { "hooks": [ { "type": "command", "command": "curl -s -o /dev/null -X POST http://localhost:4000/events -H \"Content-Type: application/json\" -d @-", "timeout": 5 } ] }
     ],
     "SessionEnd": [
       { "hooks": [ { "type": "http", "url": "http://localhost:4000/events", "timeout": 5 } ] }
