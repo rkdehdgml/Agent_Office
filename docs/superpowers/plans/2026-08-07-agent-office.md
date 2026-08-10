@@ -180,7 +180,7 @@ app.listen(HTTP_PORT, HOST, () => {
 const wss = new WebSocketServer({
   port: WS_PORT,
   host: HOST,
-  verifyClient: ({ origin }) => origin === UI_ORIGIN,
+  verifyClient: ({ origin }: { origin: string }) => origin === UI_ORIGIN,
 });
 
 function broadcast(event: unknown) {
