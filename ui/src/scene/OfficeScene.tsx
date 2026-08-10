@@ -6,10 +6,17 @@ import { CharacterActor } from "./CharacterActor";
 import { deskSlotsFor, homePositionFor } from "./deskLayout";
 import { HQ_ROOM } from "../officeReducer";
 import type { OfficeState } from "../officeReducer";
+import type { WalkCommand } from "./useWalkerCommands";
 
 const DEPARTMENTS = ["research-dept", "planning-dept", "dev-dept", HQ_ROOM];
 
-export function OfficeScene({ state }: { state: OfficeState }) {
+export function OfficeScene({
+  state,
+  commandsRef,
+}: {
+  state: OfficeState;
+  commandsRef: React.MutableRefObject<Map<string, WalkCommand>>;
+}) {
   const characters = Object.values(state.rooms).flatMap((room) => Object.values(room.characters));
 
   return (
@@ -30,6 +37,7 @@ export function OfficeScene({ state }: { state: OfficeState }) {
           key={`${character.agentType}/${character.agentId}`}
           character={character}
           home={homePositionFor(state, character.agentType, character.agentId)}
+          commandsRef={commandsRef}
         />
       ))}
     </Canvas>

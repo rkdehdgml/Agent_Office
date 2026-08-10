@@ -1,6 +1,7 @@
-import { useEffect, useReducer, useRef } from "react";
+import { useCallback, useEffect, useReducer, useRef } from "react";
 import { applyEvent, initialOfficeState, revertStatusEvent } from "./officeReducer";
 import { useEventSocket } from "./useEventSocket";
+import { useWalkerCommands } from "./scene/useWalkerCommands";
 import { OfficeScene } from "./scene/OfficeScene";
 import { EventLog } from "./components/EventLog";
 import type { RawEvent } from "./types";
@@ -12,7 +13,17 @@ function reducer(state = initialOfficeState(), event: RawEvent) {
 
 export default function App() {
   const [state, dispatch] = useReducer(reducer, undefined, initialOfficeState);
-  const { connected } = useEventSocket(dispatch);
+  const { commandsRef, onRawEvent } = useWalkerCommands(state);
+
+  const handleEvent = useCallback(
+    (event: RawEvent) => {
+      dispatch(event);
+      onRawEvent(event);
+    },
+    [onRawEvent]
+  );
+  const { connected } = useEventSocket(handleEvent);
+
   const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   useEffect(() => {
@@ -55,7 +66,7 @@ export default function App() {
       </header>
       <div className="office-body">
         <div className="scene-container">
-          <OfficeScene state={state} />
+          <OfficeScene state={state} commandsRef={commandsRef} />
         </div>
         <EventLog entries={state.log} />
       </div>
