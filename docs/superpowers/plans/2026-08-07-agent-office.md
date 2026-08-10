@@ -21,6 +21,12 @@
 - Exception: `ui/src/officeReducer.ts` (the core event→state mapping logic) gets a small `vitest` unit test suite (`ui/src/officeReducer.test.ts`), since it's pure, high-value-to-verify logic. This is the only automated test file in the project — do not add tests elsewhere.
 - A local git repository was initialized specifically to support this plan's subagent-driven execution (task-scoped commits, diffs, and rollback). Commit at the end of each task as usual. There is no remote — never push.
 - Ports are fixed: server HTTP `4000`, server WS `4001`, UI dev server `5173` (Vite default).
+- Final review correction: both the HTTP and WS servers bind explicitly to `127.0.0.1` (not the default all-interfaces), so the event stream (which carries file contents and prompt text) isn't reachable from other machines on the LAN — this matches the spec's stated "전부 localhost에서 동작" intent, which the original per-task code omitted.
+- Final review correction: the WS server's `verifyClient` restricts connections to `Origin: http://localhost:5173`, so an arbitrary web page open in the same browser can't open a raw WebSocket to `ws://localhost:4001` and read the live event/history stream (binding to 127.0.0.1 alone doesn't stop this, since the attacking page would run on the same machine).
+- Final review correction: `express.json()` uses a `10mb` limit instead of the default `100kb`, so large `tool_input` payloads (e.g. a `Write` of a big file) don't get silently dropped with a 400, which would otherwise surface as hook-failure noise in the user's live Claude session.
+- Final review correction: `README.md`'s install section includes a root `npm install` (for the `concurrently` devDependency) before the per-package installs — the original README only listed `server`/`ui` installs, so a fresh checkout following it verbatim would fail at `npm run dev`.
+- Final review correction: `App.tsx`'s revert-timer map is keyed by `` `${agentType}/${agentId}` `` instead of `agentId` alone, since character identity is the pair, not `agentId` alone (two different rooms could otherwise collide on the HQ fallback id and clear each other's timers).
+- Final review correction: `Character.tsx`'s `idle-bob` animation class is applied only when `character.active` is true, so a "퇴근"/grayed-out character stops bobbing, matching the spec's "작업 중에는 애니메이션" intent. The `hair` and `head` divs are also reordered (head first, then hair) so hair actually paints on top instead of being mostly hidden under the head.
 
 ---
 
@@ -141,10 +147,12 @@ import type { HookEvent } from "./types.js";
 
 const HTTP_PORT = 4000;
 const WS_PORT = 4001;
+const HOST = "127.0.0.1";
+const UI_ORIGIN = "http://localhost:5173";
 
 const store = new EventStore();
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 
 app.post("/events", (req, res) => {
   const body = req.body as HookEvent;
@@ -165,11 +173,15 @@ app.use((_err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   res.status(400).json({ error: "invalid json" });
 });
 
-app.listen(HTTP_PORT, () => {
-  console.log(`Event server listening on http://localhost:${HTTP_PORT}`);
+app.listen(HTTP_PORT, HOST, () => {
+  console.log(`Event server listening on http://${HOST}:${HTTP_PORT}`);
 });
 
-const wss = new WebSocketServer({ port: WS_PORT });
+const wss = new WebSocketServer({
+  port: WS_PORT,
+  host: HOST,
+  verifyClient: ({ origin }) => origin === UI_ORIGIN,
+});
 
 function broadcast(event: unknown) {
   const payload = JSON.stringify(event);
@@ -183,7 +195,7 @@ function broadcast(event: unknown) {
 wss.on("connection", (socket) => {
   console.log("WS client connected, sending history");
   socket.on("error", (err) => {
-    console.error("WS client socket error:", err);
+    console.error("[ws socket error]", err);
   });
   for (const event of store.getHistory()) {
     socket.send(JSON.stringify(event));
@@ -191,11 +203,11 @@ wss.on("connection", (socket) => {
 });
 
 wss.on("error", (err) => {
-  console.error("WebSocketServer error:", err);
+  console.error("[ws server error]", err);
 });
 
 wss.on("listening", () => {
-  console.log(`WebSocket server listening on ws://localhost:${WS_PORT}`);
+  console.log(`WebSocket server listening on ws://${HOST}:${WS_PORT}`);
 });
 ```
 
@@ -901,9 +913,9 @@ export function CharacterView({ character }: { character: CharacterModel }) {
   const palette = paletteFor(character.agentType);
   return (
     <div className={`character ${character.active ? "active" : "inactive"}`}>
-      <div className="sprite idle-bob">
-        <div className="px hair" style={{ background: palette.hair }} />
+      <div className={`sprite ${character.active ? "idle-bob" : ""}`}>
         <div className="px head" style={{ background: palette.skin }} />
+        <div className="px hair" style={{ background: palette.hair }} />
         <div className="px eye l" />
         <div className="px eye r" />
         <div className="px body" style={{ background: palette.body }} />
@@ -1101,7 +1113,7 @@ export default function App() {
   useEffect(() => {
     for (const room of Object.values(state.rooms)) {
       for (const character of Object.values(room.characters)) {
-        const key = character.agentId;
+        const key = `${character.agentType}/${character.agentId}`;
         if (character.status === "완료 ✅") {
           if (!timersRef.current.has(key)) {
             const timer = setTimeout(() => {
@@ -1280,6 +1292,7 @@ Claude Code에서 실행되는 AI 에이전트(메인 스레드 + 서브에이�
 
 1. 의존성 설치 (최초 1회):
    ```bash
+   npm install
    npm install --prefix server
    npm install --prefix ui
    ```
