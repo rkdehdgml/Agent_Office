@@ -55,7 +55,7 @@ export default function App() {
       </header>
       <div className="office-body">
         <div className="scene-container">
-          <OfficeScene />
+          <OfficeScene state={state} />
         </div>
         <EventLog entries={state.log} />
       </div>
