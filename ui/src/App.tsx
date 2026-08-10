@@ -23,7 +23,7 @@ export default function App() {
   useEffect(() => {
     for (const room of Object.values(state.rooms)) {
       for (const character of Object.values(room.characters)) {
-        const key = character.agentId;
+        const key = `${character.agentType}/${character.agentId}`;
         if (character.status === "완료 ✅") {
           if (!timersRef.current.has(key)) {
             const timer = setTimeout(() => {

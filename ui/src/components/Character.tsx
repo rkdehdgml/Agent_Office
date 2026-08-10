@@ -17,9 +17,9 @@ export function CharacterView({ character }: { character: CharacterModel }) {
   const palette = paletteFor(character.agentType);
   return (
     <div className={`character ${character.active ? "active" : "inactive"}`}>
-      <div className="sprite idle-bob">
-        <div className="px hair" style={{ background: palette.hair }} />
+      <div className={`sprite ${character.active ? "idle-bob" : ""}`}>
         <div className="px head" style={{ background: palette.skin }} />
+        <div className="px hair" style={{ background: palette.hair }} />
         <div className="px eye l" />
         <div className="px eye r" />
         <div className="px body" style={{ background: palette.body }} />

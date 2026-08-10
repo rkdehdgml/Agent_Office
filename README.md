@@ -8,6 +8,7 @@ Claude Code에서 실행되는 AI 에이전트(메인 스레드 + 서브에이�
 
 1. 의존성 설치 (최초 1회):
    ```bash
+   npm install
    npm install --prefix server
    npm install --prefix ui
    ```
