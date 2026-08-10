@@ -51,7 +51,7 @@ const TOOL_STATUS: Record<string, CharacterStatus> = {
   Bash: "명령 실행 중 ⚙️",
   WebSearch: "검색 중 🌐",
   WebFetch: "검색 중 🌐",
-  Task: "업무 지시 중 📋",
+  Agent: "업무 지시 중 📋",
 };
 
 function ensureRoom(state: OfficeState, agentType: string): OfficeState {

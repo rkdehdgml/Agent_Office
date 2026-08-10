@@ -98,4 +98,12 @@ describe("applyEvent", () => {
     state = applyEvent(state, revertStatusEvent("research-dept", "a1"));
     expect(state.log).toHaveLength(logCountBefore);
   });
+
+  it("maps the real subagent-call tool_name 'Agent' to '업무 지시 중 📋' (not 'Task')", () => {
+    const state = applyEvent(initialOfficeState(), {
+      hook_event_name: "PreToolUse",
+      tool_name: "Agent",
+    });
+    expect(state.rooms[HQ_ROOM].characters[HQ_ROOM].status).toBe("업무 지시 중 📋");
+  });
 });
