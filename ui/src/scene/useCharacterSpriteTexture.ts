@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
-import { CanvasTexture, NearestFilter } from "three";
+import { CanvasTexture, NearestFilter, SRGBColorSpace } from "three";
 import { drawCharacterFrame, SPRITE_HEIGHT, SPRITE_WIDTH } from "./pixelSprite";
 import type { CharacterPalette } from "./pixelSprite";
 import type { AnimationClip } from "./animationClip";
@@ -21,6 +21,7 @@ export function useCharacterSpriteTexture(palette: CharacterPalette, clip: Anima
 
   const texture = useMemo(() => {
     const tex = new CanvasTexture(canvasRef.current!);
+    tex.colorSpace = SRGBColorSpace;
     tex.magFilter = NearestFilter;
     tex.minFilter = NearestFilter;
     return tex;

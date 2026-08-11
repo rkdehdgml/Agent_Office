@@ -1,4 +1,4 @@
-import { CanvasTexture, NearestFilter, RepeatWrapping } from "three";
+import { CanvasTexture, NearestFilter, RepeatWrapping, SRGBColorSpace } from "three";
 import { TILE_SIZE, drawDeskTopTile, drawFloorTile } from "./pixelTile";
 
 let floorTexture: CanvasTexture | null = null;
@@ -18,6 +18,7 @@ export function getFloorTexture(): CanvasTexture {
     }
   }
   floorTexture = new CanvasTexture(canvas);
+  floorTexture.colorSpace = SRGBColorSpace;
   floorTexture.magFilter = NearestFilter;
   floorTexture.minFilter = NearestFilter;
   floorTexture.wrapS = floorTexture.wrapT = RepeatWrapping;
@@ -35,6 +36,7 @@ export function getDeskTopTexture(): CanvasTexture {
   const ctx = canvas.getContext("2d")!;
   drawDeskTopTile(ctx);
   deskTopTexture = new CanvasTexture(canvas);
+  deskTopTexture.colorSpace = SRGBColorSpace;
   deskTopTexture.magFilter = NearestFilter;
   deskTopTexture.minFilter = NearestFilter;
   return deskTopTexture;
