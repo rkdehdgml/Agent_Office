@@ -56,3 +56,49 @@ Claude Code에서 실행되는 AI 에이전트(메인 스레드 + 서브에이�
 - **새로고침하면 상태가 사라진다**: 서버가 최근 200개 이벤트만 메모리에 보관하므로,
   서버 자체를 재시작하면 히스토리가 사라집니다 (정상 동작). UI만 새로고침하는 경우는
   서버가 히스토리를 다시 보내주므로 복원됩니다.
+
+## 픽셀아트 에셋 교체
+
+현재 UI는 절차적으로 생성된 플레이스홀더 픽셀아트를 사용합니다. 아래는 향후 실제 무료 에셋 팩으로 교체하는
+수동 절차입니다. 모든 다운로드는 itch.io 및 kenney.nl에서 이루어지며, 코드 변경이 필요한 부분은 명시되어 있습니다.
+
+### 절차
+
+1. **MetroCity 캐릭터 팩 다운로드**
+   - https://jik-a-4.itch.io/metrocity-free-topdown-character-pack 에서 "Download Now" 클릭
+   - "No thanks, just take me to the downloads" 선택 (선택사항 결제 건너뛰기)
+   - ZIP 파일 저장
+
+2. **같은 작가의 인테리어 팩 다운로드**
+   - itch.io에서 "JIK-A-4 top down interior" 검색 (캐릭터 팩 페이지에서도 링크됨)
+   - 해당 팩 다운로드 및 저장
+
+3. **스프라이트 시트 추출**
+   - 캐릭터 스프라이트 PNG → `ui/public/sprites/characters/`
+   - 인테리어 타일 PNG → `ui/public/sprites/interior/`
+
+4. **pixelSprite.ts의 drawCharacterFrame 함수 업데이트**
+   - 파일: `ui/src/scene/pixelSprite.ts`
+   - 현재: 절차적 `fillRect` 블록 사용
+   - 변경: 실제 스프라이트 시트에서 `drawImage` 크롭으로 변경
+   - 이미지 뷰어에서 PNG를 열어 프레임 그리드 크기 확인 (MetroCity 시트는 보통 애니메이션 방향별 고정 행 레이아웃)
+   - 함수 시그니처 유지: `(ctx, palette, frame) => void` — `useCharacterSpriteTexture.ts`와 모든 호출자는 변경 불필요
+
+5. **부서별 색상 틴트 처리**
+   - 현재: 절차적 팔레트 생성 (단일 템플릿만 존재)
+   - 변경: 스프라이트 그린 후 `ctx.globalCompositeOperation = "multiply"` 설정
+   - 부서 색상으로 오버레이 채우기
+   - 합성 모드 초기화
+   - 결과: 단일 실제 스프라이트 시트로 네 부서 모두 지원
+
+6. **사운드 효과 추가**
+   - Kenney의 무료 CC0 UI 오디오 팩 다운로드: https://kenney.nl/assets/ui-audio
+   - 3개 짧은 클립 선택 및 저장:
+     - `ui/public/sfx/complete.mp3`
+     - `ui/public/sfx/failure.mp3`
+     - `ui/public/sfx/leave.mp3`
+   - 코드 변경 불필요: `ui/src/audio/playSound.ts`는 이미 이 경로들을 가리킴
+
+7. **크레딧 추가**
+   - README 또는 적절한 크레딧 파일에 다음 줄 추가:
+     > Character/interior art by JIK-A-4 (MetroCity, free). UI sound effects by Kenney (kenney.nl, CC0).
