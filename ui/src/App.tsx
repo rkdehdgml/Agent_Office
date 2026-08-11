@@ -1,10 +1,13 @@
-import { useCallback, useEffect, useReducer, useRef } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { applyEvent, initialOfficeState, revertStatusEvent } from "./officeReducer";
 import { useEventSocket } from "./useEventSocket";
 import { useWalkerCommands } from "./scene/useWalkerCommands";
 import { OfficeScene } from "./scene/OfficeScene";
 import { EventLog } from "./components/EventLog";
 import type { RawEvent } from "./types";
+import { createSfxController } from "./audio/sfx";
+import { playSound } from "./audio/playSound";
+import { useSfxOnStatusChange } from "./audio/useSfxOnStatusChange";
 import "./App.css";
 
 function reducer(state = initialOfficeState(), event: RawEvent) {
@@ -14,6 +17,9 @@ function reducer(state = initialOfficeState(), event: RawEvent) {
 export default function App() {
   const [state, dispatch] = useReducer(reducer, undefined, initialOfficeState);
   const { commandsRef, onRawEvent } = useWalkerCommands(state);
+  const sfxController = useMemo(() => createSfxController(playSound), []);
+  useSfxOnStatusChange(state, sfxController);
+  const [muted, setMuted] = useState(sfxController.isMuted());
 
   const handleEvent = useCallback(
     (event: RawEvent) => {
@@ -63,6 +69,15 @@ export default function App() {
       <header className="office-header">
         <h1>🏢 Agent Office</h1>
         <span className={`ws-status ${connected ? "on" : "off"}`}>{connected ? "연결됨" : "연결 끊김"}</span>
+        <button
+          className="mute-toggle"
+          onClick={() => {
+            sfxController.toggleMute();
+            setMuted(sfxController.isMuted());
+          }}
+        >
+          {muted ? "🔇 소리 켜기" : "🔊 소리 끄기"}
+        </button>
       </header>
       <div className="office-body">
         <div className="scene-container">
