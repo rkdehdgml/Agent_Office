@@ -27,7 +27,7 @@
 
 **Interfaces:**
 - Consumes: `CharacterStatus` from `ui/src/officeReducer.ts` (existing).
-- Produces: `AnimationClip` type (`"idle" | "walk" | "read" | "type" | "alert"`) and `animationClipFor(status, phase, active)` — used by Task 6 (`CharacterActor.tsx`).
+- Produces: `AnimationClip` type (`"idle" | "walk" | "read" | "type" | "alert"`) and `animationClipFor(status, phase, active)` — used by Task 7 (`CharacterActor.tsx`).
 
 - [ ] **Step 1: Write the failing test**
 
@@ -123,7 +123,7 @@ git commit -m "Add status-to-animation-clip mapping for pixel sprite redesign"
 
 **Interfaces:**
 - Consumes: `CharacterStatus` from `ui/src/officeReducer.ts`.
-- Produces: `isSpeechBubbleStatus(status)` — used by Task 7 (`StatusLabel.tsx`).
+- Produces: `isSpeechBubbleStatus(status)` — used by Task 6 (`StatusLabel.tsx`).
 
 - [ ] **Step 1: Write the failing test**
 
@@ -329,7 +329,7 @@ git commit -m "Add sound mapping and default-muted sfx controller"
 
 **Interfaces:**
 - Consumes: `AnimationClip` from Task 1.
-- Produces: `CharacterPalette` type, `SPRITE_WIDTH`/`SPRITE_HEIGHT` constants, `drawCharacterFrame(ctx, palette, frame)`; `useCharacterSpriteTexture(palette, clip)` React hook returning a `THREE.CanvasTexture` — used by Task 6 (`CharacterActor.tsx`).
+- Produces: `CharacterPalette` type, `SPRITE_WIDTH`/`SPRITE_HEIGHT` constants, `drawCharacterFrame(ctx, palette, frame)`; `useCharacterSpriteTexture(palette, clip)` React hook returning a `THREE.CanvasTexture` — used by Task 7 (`CharacterActor.tsx`).
 - No test file: this task only touches Canvas 2D / three.js APIs, which aren't available in the vitest node environment — consistent with `Desk.tsx`/`Props.tsx` having no tests today. Verified visually in Task 11.
 
 - [ ] **Step 1: Write the pixel sprite drawing module**
@@ -429,7 +429,7 @@ export function useCharacterSpriteTexture(palette: CharacterPalette, clip: Anima
 - [ ] **Step 3: Typecheck**
 
 Run: `npm run build` (from `ui/`)
-Expected: succeeds with no TypeScript errors (this only compiles; Task 6 wires it into a visible component).
+Expected: succeeds with no TypeScript errors (this only compiles; Task 7 wires it into a visible component).
 
 - [ ] **Step 4: Commit**
 
@@ -485,84 +485,7 @@ git commit -m "Switch office camera from isometric perspective to orthographic t
 
 ---
 
-### Task 6: Sprite billboard characters
-
-**Files:**
-- Modify: `ui/src/scene/CharacterActor.tsx` (full rewrite of the render body; keep the existing `useFrame` movement/phase logic at lines 45-104 unchanged)
-
-**Interfaces:**
-- Consumes: `animationClipFor` (Task 1), `useCharacterSpriteTexture` + `CharacterPalette` (Task 4).
-- Produces: no new exports — `CharacterActor` keeps its existing prop signature `{ character, home, commandsRef }`.
-
-- [ ] **Step 1: Replace the box-mesh JSX with a sprite, driven by the animation clip**
-
-Keep everything in `CharacterActor.tsx` above the `return` statement (lines 1-110, the movement/phase `useFrame` logic) unchanged. Only replace the imports and the returned JSX:
-
-```tsx
-import { useRef } from "react";
-import { useFrame } from "@react-three/fiber";
-import type { Group } from "three";
-import { HQ_ROOM } from "../officeReducer";
-import type { Character } from "../officeReducer";
-import type { Vec2 } from "./deskLayout";
-import type { WalkCommand } from "./useWalkerCommands";
-import { animationClipFor } from "./animationClip";
-import { useCharacterSpriteTexture } from "./useCharacterSpriteTexture";
-import { StatusLabel } from "./StatusLabel";
-
-// ... PALETTE / DEFAULT_PALETTE / INACTIVE_COLOR / timing constants unchanged ...
-```
-
-At the end of the component, track the current `LocalPhase` in a small piece of render state so it can drive `animationClipFor` (the existing code only keeps phase in a ref, which doesn't trigger re-renders — add a mirrored `useState` that's updated wherever `phaseRef.current` is assigned inside `useFrame`):
-
-```tsx
-const [renderPhase, setRenderPhase] = useState<LocalPhase>("idle");
-```
-
-Add `setRenderPhase(phaseRef.current)` immediately after every `phaseRef.current = ...` assignment inside the existing `useFrame` callback (there are 4: on command apply, on arriving at a visit target, on finishing a greeting as caller, on finishing a greeting as partner/idle-return). Import `useState` from `"react"` alongside the existing `useRef` import.
-
-Replace the returned JSX (previously five `<mesh>` boxes) with:
-
-```tsx
-  const clip = animationClipFor(character.status, renderPhase, character.active);
-  const spritePalette = character.active ? palette : { body: INACTIVE_COLOR, hair: INACTIVE_COLOR, skin: INACTIVE_COLOR, pants: INACTIVE_COLOR };
-  const texture = useCharacterSpriteTexture(spritePalette, clip);
-
-  return (
-    <group ref={groupRef} position={[home.x, 0, home.z]}>
-      <sprite scale={[0.9, 1.25, 1]} position={[0, 0.65, 0]}>
-        <spriteMaterial map={texture} transparent opacity={character.active ? 1 : 0.5} />
-      </sprite>
-      <StatusLabel name={key} status={character.status} active={character.active} />
-    </group>
-  );
-```
-
-Remove the now-unused `skinColor`/`bodyColor`/`hairColor`/`pantsColor`/`opacity` local variables that only fed the deleted `<mesh>` elements (keep `PALETTE`, `DEFAULT_PALETTE`, `INACTIVE_COLOR` themselves — still used above).
-
-Also export the `LocalPhase` type (currently a local, unexported type alias) so it's a single source of truth:
-
-```ts
-export type LocalPhase = "idle" | "walking-to-visit" | "greeting" | "walking-back";
-```
-
-- [ ] **Step 2: Typecheck**
-
-Run: `npm run build` (from `ui/`)
-Expected: fails only on the missing `./StatusLabel` import (created in Task 7) — confirm the error is exactly that and nothing else in this file.
-
-- [ ] **Step 3: Commit**
-
-```bash
-git add ui/src/scene/CharacterActor.tsx
-git commit -m "Render characters as animated pixel sprite billboards"
-```
-
-(This task's build will go green once Task 7 adds `StatusLabel.tsx` — that's expected; the two are sequenced this way because `CharacterActor` is the more complex, higher-risk change and should be reviewed on its own.)
-
----
-
-### Task 7: Floating name/status label
+### Task 6: Floating name/status label
 
 **Files:**
 - Create: `ui/src/scene/StatusLabel.tsx`
@@ -570,7 +493,7 @@ git commit -m "Render characters as animated pixel sprite billboards"
 
 **Interfaces:**
 - Consumes: `isSpeechBubbleStatus` (Task 2), `CharacterStatus` (existing).
-- Produces: `StatusLabel` component with props `{ name: string; status: CharacterStatus; active: boolean }` — consumed by Task 6's `CharacterActor.tsx`.
+- Produces: `StatusLabel` component with props `{ name: string; status: CharacterStatus; active: boolean }` — consumed by Task 7's `CharacterActor.tsx`.
 
 - [ ] **Step 1: Write the component**
 
@@ -623,13 +546,88 @@ Add to the end of `ui/src/App.css`:
 - [ ] **Step 3: Typecheck**
 
 Run: `npm run build` (from `ui/`)
-Expected: succeeds (this also resolves the import Task 6 was left waiting on).
+Expected: succeeds with no TypeScript errors. (`StatusLabel` has no consumer yet — that arrives in Task 7 — so this only compiles the new file.)
 
 - [ ] **Step 4: Commit**
 
 ```bash
 git add ui/src/scene/StatusLabel.tsx ui/src/App.css
 git commit -m "Add floating name/status label above each character"
+```
+
+---
+
+### Task 7: Sprite billboard characters
+
+**Files:**
+- Modify: `ui/src/scene/CharacterActor.tsx` (full rewrite of the render body; keep the existing `useFrame` movement/phase logic at lines 45-104 unchanged)
+
+**Interfaces:**
+- Consumes: `animationClipFor` (Task 1), `useCharacterSpriteTexture` + `CharacterPalette` (Task 4), `StatusLabel` (Task 6).
+- Produces: no new exports — `CharacterActor` keeps its existing prop signature `{ character, home, commandsRef }`.
+
+- [ ] **Step 1: Replace the box-mesh JSX with a sprite, driven by the animation clip**
+
+Keep everything in `CharacterActor.tsx` above the `return` statement (lines 1-110, the movement/phase `useFrame` logic) unchanged. Only replace the imports and the returned JSX:
+
+```tsx
+import { useRef, useState } from "react";
+import { useFrame } from "@react-three/fiber";
+import type { Group } from "three";
+import { HQ_ROOM } from "../officeReducer";
+import type { Character } from "../officeReducer";
+import type { Vec2 } from "./deskLayout";
+import type { WalkCommand } from "./useWalkerCommands";
+import { animationClipFor } from "./animationClip";
+import { useCharacterSpriteTexture } from "./useCharacterSpriteTexture";
+import { StatusLabel } from "./StatusLabel";
+
+// ... PALETTE / DEFAULT_PALETTE / INACTIVE_COLOR / timing constants unchanged ...
+```
+
+At the end of the component, track the current `LocalPhase` in a small piece of render state so it can drive `animationClipFor` (the existing code only keeps phase in a ref, which doesn't trigger re-renders — add a mirrored `useState` that's updated wherever `phaseRef.current` is assigned inside `useFrame`):
+
+```tsx
+const [renderPhase, setRenderPhase] = useState<LocalPhase>("idle");
+```
+
+Add `setRenderPhase(phaseRef.current)` immediately after every `phaseRef.current = ...` assignment inside the existing `useFrame` callback (there are 4: on command apply, on arriving at a visit target, on finishing a greeting as caller, on finishing a greeting as partner/idle-return).
+
+Replace the returned JSX (previously five `<mesh>` boxes) with:
+
+```tsx
+  const clip = animationClipFor(character.status, renderPhase, character.active);
+  const spritePalette = character.active ? palette : { body: INACTIVE_COLOR, hair: INACTIVE_COLOR, skin: INACTIVE_COLOR, pants: INACTIVE_COLOR };
+  const texture = useCharacterSpriteTexture(spritePalette, clip);
+
+  return (
+    <group ref={groupRef} position={[home.x, 0, home.z]}>
+      <sprite scale={[0.9, 1.25, 1]} position={[0, 0.65, 0]}>
+        <spriteMaterial map={texture} transparent opacity={character.active ? 1 : 0.5} />
+      </sprite>
+      <StatusLabel name={key} status={character.status} active={character.active} />
+    </group>
+  );
+```
+
+Remove the now-unused `skinColor`/`bodyColor`/`hairColor`/`pantsColor`/`opacity` local variables that only fed the deleted `<mesh>` elements (keep `PALETTE`, `DEFAULT_PALETTE`, `INACTIVE_COLOR` themselves — still used above).
+
+Also export the `LocalPhase` type (currently a local, unexported type alias) so it's a single source of truth:
+
+```ts
+export type LocalPhase = "idle" | "walking-to-visit" | "greeting" | "walking-back";
+```
+
+- [ ] **Step 2: Typecheck**
+
+Run: `npm run build` (from `ui/`)
+Expected: succeeds with no TypeScript errors.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add ui/src/scene/CharacterActor.tsx
+git commit -m "Render characters as animated pixel sprite billboards"
 ```
 
 ---
