@@ -74,15 +74,17 @@ Claude Code에서 실행되는 AI 에이전트(메인 스레드 + 서브에이�
    - 해당 팩 다운로드 및 저장
 
 3. **스프라이트 시트 추출**
-   - 캐릭터 스프라이트 PNG → `ui/public/sprites/characters/`
-   - 인테리어 타일 PNG → `ui/public/sprites/interior/`
+   - `ui/public/` 디렉터리가 아직 없다면 새로 생성
+   - 캐릭터 스프라이트 PNG → `ui/public/sprites/characters/` (디렉터리 생성 후 저장)
+   - 인테리어 타일 PNG → `ui/public/sprites/interior/` (디렉터리 생성 후 저장)
 
 4. **pixelSprite.ts의 drawCharacterFrame 함수 업데이트**
    - 파일: `ui/src/scene/pixelSprite.ts`
    - 현재: 절차적 `fillRect` 블록 사용
    - 변경: 실제 스프라이트 시트에서 `drawImage` 크롭으로 변경
    - 이미지 뷰어에서 PNG를 열어 프레임 그리드 크기 확인 (MetroCity 시트는 보통 애니메이션 방향별 고정 행 레이아웃)
-   - 함수 시그니처 유지: `(ctx, palette, frame) => void` — `useCharacterSpriteTexture.ts`와 모든 호출자는 변경 불필요
+   - **이미지 로딩은 비동기**: `new Image()`의 `src`가 로드되기 전에 `drawImage`를 호출하면 아무것도 그려지지 않고 이후에도 다시 그려지지 않습니다. 스프라이트 시트 이미지를 모듈 스코프에서 한 번만 로드하고, `img.onload`에서 (이미 그려진 프레임이 있다면) 다시 그린 뒤 텍스처의 `needsUpdate = true`를 설정하세요.
+   - **시그니처 변경 필요**: 현재 `(ctx, palette, frame: 0 | 1) => void`에는 애니메이션 종류(clip) 구분이 없어 읽기/쓰기/경고 등 서로 다른 모션을 표현할 수 없습니다. 디자인 문서의 애니메이션 표를 실제로 구현하려면 `clip: AnimationClip` 매개변수를 추가하고, 유일한 호출부인 `ui/src/scene/useCharacterSpriteTexture.ts`도 함께 수정해야 합니다.
 
 5. **부서별 색상 틴트 처리**
    - 현재: 절차적 팔레트 생성 (단일 템플릿만 존재)

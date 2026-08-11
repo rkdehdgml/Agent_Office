@@ -17,6 +17,7 @@ const PALETTE: Record<string, { body: string; hair: string; skin: string; pants:
 };
 const DEFAULT_PALETTE = { body: "#8a8a8a", hair: "#2b2b2b", skin: "#d8b48a", pants: "#3a3a3a" };
 const INACTIVE_COLOR = "#767676";
+const INACTIVE_PALETTE = { body: INACTIVE_COLOR, hair: INACTIVE_COLOR, skin: INACTIVE_COLOR, pants: INACTIVE_COLOR };
 
 const WALK_SPEED = 4; // units per second
 const GREETING_DURATION_MS = 1500;
@@ -113,9 +114,7 @@ export function CharacterActor({
   });
 
   const clip = animationClipFor(character.status, renderPhase, character.active);
-  const spritePalette = character.active
-    ? palette
-    : { body: INACTIVE_COLOR, hair: INACTIVE_COLOR, skin: INACTIVE_COLOR, pants: INACTIVE_COLOR };
+  const spritePalette = character.active ? palette : INACTIVE_PALETTE;
   const texture = useCharacterSpriteTexture(spritePalette, clip);
 
   return (
