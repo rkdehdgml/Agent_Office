@@ -7,6 +7,7 @@ import { deskSlotsFor, homePositionFor } from "./deskLayout";
 import { HQ_ROOM } from "../officeReducer";
 import type { OfficeState } from "../officeReducer";
 import type { WalkCommand } from "./useWalkerCommands";
+import { getFloorTexture } from "./officeTextures";
 
 const DEPARTMENTS = ["research-dept", "planning-dept", "dev-dept", HQ_ROOM];
 
@@ -26,7 +27,7 @@ export function OfficeScene({
       <directionalLight position={[10, 20, 10]} intensity={0.8} />
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[18, 16]} />
-        <meshStandardMaterial color="#3a2f28" />
+        <meshStandardMaterial map={getFloorTexture()} />
       </mesh>
       {DEPARTMENTS.flatMap((dept) =>
         deskSlotsFor(dept).map((slot, i) => <Desk key={`desk-${dept}-${i}`} position={slot} agentType={dept} />)
