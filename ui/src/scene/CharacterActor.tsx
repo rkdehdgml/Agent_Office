@@ -8,6 +8,7 @@ import type { WalkCommand } from "./useWalkerCommands";
 import { animationClipFor } from "./animationClip";
 import { useCharacterSpriteTexture } from "./useCharacterSpriteTexture";
 import { StatusLabel } from "./StatusLabel";
+import { getShadowTexture } from "./officeTextures";
 
 const PALETTE: Record<string, { body: string; hair: string; skin: string; pants: string }> = {
   "research-dept": { body: "#3d7ea6", hair: "#3a2a20", skin: "#e8b98a", pants: "#26333d" },
@@ -119,6 +120,10 @@ export function CharacterActor({
 
   return (
     <group ref={groupRef} position={[home.x, 0, home.z]}>
+      <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[0.9, 0.9]} />
+        <meshBasicMaterial map={getShadowTexture()} transparent depthWrite={false} />
+      </mesh>
       <sprite scale={[0.9, 1.25, 1]} position={[0, 0.65, 0]}>
         <spriteMaterial map={texture} transparent opacity={character.active ? 1 : 0.5} />
       </sprite>

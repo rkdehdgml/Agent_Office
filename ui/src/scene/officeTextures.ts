@@ -41,3 +41,22 @@ export function getDeskTopTexture(): CanvasTexture {
   deskTopTexture.minFilter = NearestFilter;
   return deskTopTexture;
 }
+
+let shadowTexture: CanvasTexture | null = null;
+
+export function getShadowTexture(): CanvasTexture {
+  if (shadowTexture) return shadowTexture;
+  const size = 64;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  const gradient = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+  gradient.addColorStop(0, "rgba(0, 0, 0, 0.45)");
+  gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, size, size);
+  shadowTexture = new CanvasTexture(canvas);
+  shadowTexture.colorSpace = SRGBColorSpace;
+  return shadowTexture;
+}
