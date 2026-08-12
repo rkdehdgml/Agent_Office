@@ -1,7 +1,7 @@
 const WALL_HEIGHT = 1.6;
 const WALL_THICKNESS = 0.25;
-const OUTER_COLOR = "#1b2130";
-const DIVIDER_COLOR = "#2a2f42";
+const OUTER_COLOR = "#3c4562";
+const DIVIDER_COLOR = "#57608a";
 
 export function Walls() {
   return (

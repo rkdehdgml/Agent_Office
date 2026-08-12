@@ -27,8 +27,8 @@ export function OfficeScene({
   return (
     <Canvas shadows={false}>
       <OrthographicCamera makeDefault position={CAMERA_POSITION} zoom={38} onUpdate={(cam) => cam.lookAt(0, 0, 0)} />
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[10, 20, 10]} intensity={0.8} />
+      <ambientLight intensity={0.95} />
+      <directionalLight position={[10, 20, 10]} intensity={1.15} />
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[18, 16]} />
         <meshStandardMaterial map={getFloorTexture()} />
