@@ -1,6 +1,6 @@
 import { HQ_ROOM } from "../officeReducer";
 import type { Vec2 } from "./deskLayout";
-import { getDeskTopTexture } from "./officeTextures";
+import { getDeskTopTexture, getShadowTexture } from "./officeTextures";
 
 const DEPARTMENT_COLOR: Record<string, string> = {
   "research-dept": "#3d7ea6",
@@ -14,6 +14,10 @@ export function Desk({ position, agentType }: { position: Vec2; agentType: strin
   const color = DEPARTMENT_COLOR[agentType] ?? DEFAULT_COLOR;
   return (
     <group position={[position.x, 0, position.z]}>
+      <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[1.3, 0.9]} />
+        <meshBasicMaterial map={getShadowTexture()} transparent depthWrite={false} />
+      </mesh>
       <mesh position={[0, 0.25, 0]}>
         <boxGeometry args={[1.2, 0.5, 0.8]} />
         <meshStandardMaterial map={getDeskTopTexture()} />
