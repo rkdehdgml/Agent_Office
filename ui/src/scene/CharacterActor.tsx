@@ -114,8 +114,14 @@ export function CharacterActor({
       }
     }
 
-    if (!isFixed && wasActiveRef.current && !character.active) {
-      fadeStartedAtRef.current = now;
+    if (!isFixed) {
+      if (wasActiveRef.current && !character.active) {
+        fadeStartedAtRef.current = now;
+      } else if (character.active) {
+        fadeStartedAtRef.current = null;
+        hiddenRef.current = false;
+        if (materialRef.current) materialRef.current.opacity = 1;
+      }
     }
     wasActiveRef.current = character.active;
 
