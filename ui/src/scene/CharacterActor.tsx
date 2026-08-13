@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
-import type { Group } from "three";
+import type { Group, SpriteMaterial } from "three";
 import { HQ_ROOM } from "../officeReducer";
 import type { Character } from "../officeReducer";
 import type { Vec2 } from "./deskLayout";
@@ -19,14 +19,13 @@ const PALETTE: Record<string, { body: string; hair: string; skin: string; pants:
   [HQ_ROOM]: { body: "#b08d57", hair: "#3a2a20", skin: "#e8b98a", pants: "#4a3a28" },
 };
 const DEFAULT_PALETTE = { body: "#8a8a8a", hair: "#2b2b2b", skin: "#d8b48a", pants: "#3a3a3a" };
-const INACTIVE_COLOR = "#767676";
-const INACTIVE_PALETTE = { body: INACTIVE_COLOR, hair: INACTIVE_COLOR, skin: INACTIVE_COLOR, pants: INACTIVE_COLOR };
 
 const WALK_SPEED = 4; // units per second
 const GREETING_DURATION_MS = 1500;
 const ARRIVE_EPSILON = 0.05;
 const BOB_AMPLITUDE = 0.08;
 const BOB_SPEED = 2.2;
+const FADE_DURATION_MS = 1500;
 
 export type LocalPhase = "idle" | "walking-to-visit" | "greeting" | "walking-back";
 
@@ -48,6 +47,10 @@ export function CharacterActor({
   const phaseStartedAtRef = useRef<number>(performance.now());
   const appliedCommandRef = useRef<WalkCommand | null>(null);
   const [renderPhase, setRenderPhase] = useState<LocalPhase>("idle");
+  const wasActiveRef = useRef<boolean>(character.active);
+  const fadeStartedAtRef = useRef<number | null>(null);
+  const hiddenRef = useRef<boolean>(false);
+  const materialRef = useRef<SpriteMaterial>(null);
 
   const key = `${character.agentType}/${character.agentId}`;
   const palette = PALETTE[character.agentType] ?? DEFAULT_PALETTE;
@@ -111,6 +114,20 @@ export function CharacterActor({
       }
     }
 
+    if (!isFixed && wasActiveRef.current && !character.active) {
+      fadeStartedAtRef.current = now;
+    }
+    wasActiveRef.current = character.active;
+
+    if (!isFixed && fadeStartedAtRef.current !== null) {
+      const elapsed = now - fadeStartedAtRef.current;
+      const opacity = Math.max(0, 1 - elapsed / FADE_DURATION_MS);
+      if (materialRef.current) materialRef.current.opacity = opacity;
+      if (opacity <= 0) hiddenRef.current = true;
+    }
+
+    if (groupRef.current) groupRef.current.visible = !hiddenRef.current;
+
     if (!groupRef.current) return;
     groupRef.current.position.x = posRef.current.x;
     groupRef.current.position.z = posRef.current.z;
@@ -119,8 +136,7 @@ export function CharacterActor({
   });
 
   const clip = animationClipFor(character.status, renderPhase, character.active);
-  const spritePalette = character.active ? palette : INACTIVE_PALETTE;
-  const texture = useCharacterSpriteTexture(spritePalette, clip);
+  const texture = useCharacterSpriteTexture(palette, clip);
 
   return (
     <group ref={groupRef} position={[home.x, 0, home.z]}>
@@ -129,7 +145,7 @@ export function CharacterActor({
         <meshBasicMaterial map={getShadowTexture()} transparent depthWrite={false} />
       </mesh>
       <sprite scale={[0.9, 1.25, 1]} position={[0, 0.65, 0]}>
-        <spriteMaterial map={texture} transparent opacity={character.active ? 1 : 0.5} />
+        <spriteMaterial ref={materialRef} map={texture} transparent opacity={1} />
       </sprite>
       <StatusLabel
         name={labelFor(character.agentType, character.completedCount, isFixed)}
