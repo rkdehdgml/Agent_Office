@@ -8,31 +8,46 @@ export interface Vec2 {
 
 const DESK_SLOTS: Record<string, Vec2[]> = {
   "research-dept": [
-    { x: -6, z: -4 },
-    { x: -4, z: -4 },
-    { x: -6, z: -2 },
+    { x: -10, z: -6 },
+    { x: -8, z: -6 },
+    { x: -6, z: -6 },
   ],
   "planning-dept": [
-    { x: 2, z: -4 },
-    { x: 4, z: -4 },
-    { x: 2, z: -2 },
+    { x: -2, z: -6 },
+    { x: 0, z: -6 },
+    { x: 2, z: -6 },
+  ],
+  "design-publishing-dept": [
+    { x: 6, z: -6 },
+    { x: 8, z: -6 },
+    { x: 10, z: -6 },
   ],
   "dev-dept": [
-    { x: -6, z: 2 },
-    { x: -4, z: 2 },
-    { x: -6, z: 4 },
+    { x: -10, z: 6 },
+    { x: -8, z: 6 },
+    { x: -6, z: 6 },
   ],
-  [HQ_ROOM]: [
-    { x: 2, z: 2 },
-    { x: 4, z: 2 },
-    { x: 2, z: 4 },
-  ],
+  [HQ_ROOM]: [{ x: 0, z: 6 }],
 };
 
 const DEFAULT_SLOTS: Vec2[] = [
   { x: 0, z: 0 },
   { x: 1, z: 0 },
   { x: -1, z: 0 },
+];
+
+const LEAD_SLOTS: Record<string, Vec2> = {
+  "research-dept": { x: -8, z: -7 },
+  "planning-dept": { x: 0, z: -7 },
+  "design-publishing-dept": { x: 8, z: -7 },
+  "dev-dept": { x: -8, z: 7 },
+};
+
+const DEFAULT_LEAD_SLOT: Vec2 = { x: 0, z: 0 };
+
+export const BREAK_ROOM_SLOTS: Vec2[] = [
+  { x: 7, z: 4 },
+  { x: 9, z: 4 },
 ];
 
 export function deskSlotsFor(agentType: string): Vec2[] {
@@ -42,6 +57,16 @@ export function deskSlotsFor(agentType: string): Vec2[] {
 export function deskPositionFor(agentType: string, orderIndex: number): Vec2 {
   const slots = deskSlotsFor(agentType);
   return slots[orderIndex % slots.length];
+}
+
+/**
+ * The fixed desk position for a team's always-present team-lead character.
+ * Reserved separately from `DESK_SLOTS` so the earned-rank cycling in
+ * `deskPositionFor` never assigns a real dynamic character into a
+ * team-lead's seat.
+ */
+export function leadSlotFor(agentType: string): Vec2 {
+  return LEAD_SLOTS[agentType] ?? DEFAULT_LEAD_SLOT;
 }
 
 /**

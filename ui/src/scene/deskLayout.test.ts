@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deskPositionFor, deskSlotsFor, homePositionFor } from "./deskLayout";
+import { deskPositionFor, deskSlotsFor, homePositionFor, leadSlotFor, BREAK_ROOM_SLOTS } from "./deskLayout";
 import { initialOfficeState, HQ_ROOM } from "../officeReducer";
 import type { OfficeState, CharacterStatus } from "../officeReducer";
 
@@ -60,5 +60,38 @@ describe("homePositionFor", () => {
   it("returns the HQ desk position for the HQ_ROOM constant", () => {
     const state = stateWithCharacters(HQ_ROOM, [HQ_ROOM]);
     expect(homePositionFor(state, HQ_ROOM, HQ_ROOM)).toEqual(deskPositionFor(HQ_ROOM, 0));
+  });
+});
+
+describe("deskSlotsFor — 5-room layout", () => {
+  it("gives the new design-publishing-dept 3 slots like the other teams", () => {
+    expect(deskSlotsFor("design-publishing-dept").length).toBe(3);
+  });
+
+  it("gives HQ exactly 1 slot", () => {
+    expect(deskSlotsFor(HQ_ROOM).length).toBe(1);
+  });
+});
+
+describe("leadSlotFor", () => {
+  it("returns a distinct fixed position for each of the 4 teams", () => {
+    const positions = ["research-dept", "planning-dept", "dev-dept", "design-publishing-dept"].map(leadSlotFor);
+    const unique = new Set(positions.map((p) => `${p.x},${p.z}`));
+    expect(unique.size).toBe(4);
+  });
+
+  it("never overlaps a team's own earned-rank desk slots", () => {
+    for (const dept of ["research-dept", "planning-dept", "dev-dept", "design-publishing-dept"]) {
+      const lead = leadSlotFor(dept);
+      const earned = deskSlotsFor(dept);
+      expect(earned).not.toContainEqual(lead);
+    }
+  });
+});
+
+describe("BREAK_ROOM_SLOTS", () => {
+  it("has exactly 2 distinct positions", () => {
+    expect(BREAK_ROOM_SLOTS.length).toBe(2);
+    expect(BREAK_ROOM_SLOTS[0]).not.toEqual(BREAK_ROOM_SLOTS[1]);
   });
 });
