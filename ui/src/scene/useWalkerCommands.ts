@@ -14,6 +14,7 @@ export interface WalkCommand {
   home: Vec2;
   phaseStartedAt: number;
   partnerKey?: string;
+  waitDurationMs?: number;
 }
 
 function keyFor(agentType: string, agentId: string): string {

@@ -11,6 +11,7 @@ import type { WalkCommand } from "./useWalkerCommands";
 import { getFloorTexture } from "./officeTextures";
 import { CAMERA_AZIMUTH_DEG, CAMERA_TILT_DEG, cameraPositionForTilt } from "./cameraGeometry";
 import { TEAM_LEAD_TYPES } from "./teamLeadCharacters";
+import { useBreakRoomScheduler } from "./useBreakRoomScheduler";
 
 const DEPARTMENTS = ["research-dept", "planning-dept", "dev-dept", "design-publishing-dept", HQ_ROOM];
 
@@ -24,6 +25,7 @@ export function OfficeScene({
   commandsRef: React.MutableRefObject<Map<string, WalkCommand>>;
 }) {
   const characters = Object.values(state.rooms).flatMap((room) => Object.values(room.characters));
+  useBreakRoomScheduler(state, commandsRef);
 
   return (
     <Canvas shadows={false}>

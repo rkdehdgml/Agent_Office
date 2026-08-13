@@ -100,7 +100,8 @@ export function CharacterActor({
         };
       }
     } else if (phaseRef.current === "greeting") {
-      if (now - phaseStartedAtRef.current >= GREETING_DURATION_MS) {
+      const waitDuration = appliedCommandRef.current?.waitDurationMs ?? GREETING_DURATION_MS;
+      if (now - phaseStartedAtRef.current >= waitDuration) {
         if (appliedCommandRef.current?.role === "caller") {
           phaseRef.current = "walking-back";
           setRenderPhase(phaseRef.current);
