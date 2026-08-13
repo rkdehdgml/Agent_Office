@@ -9,6 +9,7 @@ import { animationClipFor } from "./animationClip";
 import { useCharacterSpriteTexture } from "./useCharacterSpriteTexture";
 import { StatusLabel } from "./StatusLabel";
 import { getShadowTexture } from "./officeTextures";
+import { labelFor } from "./officeLabel";
 
 const PALETTE: Record<string, { body: string; hair: string; skin: string; pants: string }> = {
   "research-dept": { body: "#3d7ea6", hair: "#3a2a20", skin: "#e8b98a", pants: "#26333d" },
@@ -33,10 +34,12 @@ export function CharacterActor({
   character,
   home,
   commandsRef,
+  isFixed = false,
 }: {
   character: Character;
   home: Vec2;
   commandsRef: React.MutableRefObject<Map<string, WalkCommand>>;
+  isFixed?: boolean;
 }) {
   const groupRef = useRef<Group>(null);
   const posRef = useRef<Vec2>({ x: home.x, z: home.z });
@@ -128,7 +131,11 @@ export function CharacterActor({
       <sprite scale={[0.9, 1.25, 1]} position={[0, 0.65, 0]}>
         <spriteMaterial map={texture} transparent opacity={character.active ? 1 : 0.5} />
       </sprite>
-      <StatusLabel name={key} status={character.status} active={character.active} />
+      <StatusLabel
+        name={labelFor(character.agentType, character.completedCount, isFixed)}
+        status={character.status}
+        active={character.active}
+      />
     </group>
   );
 }
