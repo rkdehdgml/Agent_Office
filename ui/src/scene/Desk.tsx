@@ -6,6 +6,7 @@ const DEPARTMENT_COLOR: Record<string, string> = {
   "research-dept": "#3d7ea6",
   "planning-dept": "#8a5cc2",
   "dev-dept": "#3fae6a",
+  "design-publishing-dept": "#c2547e",
   [HQ_ROOM]: "#b08d57",
 };
 const DEFAULT_COLOR = "#8a8a8a";
