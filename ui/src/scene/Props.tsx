@@ -6,6 +6,8 @@ export function Props() {
       <Plant position={[-8, 0, -7]} />
       <Plant position={[8, 0, 7]} />
       <WaterCooler position={[0, 0, 6.5]} />
+      <Plant position={[11, 0, 7]} />
+      <WaterCooler position={[5, 0, 4]} />
     </>
   );
 }
