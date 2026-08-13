@@ -41,6 +41,7 @@ export function CharacterActor({
   isFixed?: boolean;
 }) {
   const groupRef = useRef<Group>(null);
+  const spriteGroupRef = useRef<Group>(null);
   const posRef = useRef<Vec2>({ x: home.x, z: home.z });
   const phaseRef = useRef<LocalPhase>("idle");
   const targetRef = useRef<Vec2>(home);
@@ -122,6 +123,14 @@ export function CharacterActor({
         fadeStartedAtRef.current = null;
         hiddenRef.current = false;
         if (materialRef.current) materialRef.current.opacity = 1;
+      } else if (!character.active && fadeStartedAtRef.current === null) {
+        // Steady-state guard: a CharacterActor that mounts fresh for an
+        // already-inactive character (HMR during dev, or any future
+        // remount) never observes the active->inactive transition above,
+        // since wasActiveRef is seeded from character.active at mount
+        // time. Without this branch it would render at full opacity
+        // forever instead of fading out.
+        fadeStartedAtRef.current = now;
       }
     }
     wasActiveRef.current = character.active;
@@ -138,8 +147,15 @@ export function CharacterActor({
     if (!groupRef.current) return;
     groupRef.current.position.x = posRef.current.x;
     groupRef.current.position.z = posRef.current.z;
+    // The outer group's y stays fixed at ground level so the shadow mesh
+    // (a direct child, at local y=0.02) never dips below the floor.
+    // Bobbing is applied only to the nested sprite group below, which
+    // wraps the sprite alone.
+    groupRef.current.position.y = 0;
     const bobbing = character.active && phaseRef.current === "idle";
-    groupRef.current.position.y = bobbing ? Math.sin((now / 1000) * BOB_SPEED) * BOB_AMPLITUDE : 0;
+    if (spriteGroupRef.current) {
+      spriteGroupRef.current.position.y = bobbing ? Math.sin((now / 1000) * BOB_SPEED) * BOB_AMPLITUDE : 0;
+    }
   });
 
   const clip = animationClipFor(character.status, renderPhase, character.active);
@@ -151,9 +167,11 @@ export function CharacterActor({
         <planeGeometry args={[0.9, 0.9]} />
         <meshBasicMaterial map={getShadowTexture()} transparent depthWrite={false} />
       </mesh>
-      <sprite scale={[0.9, 1.25, 1]} position={[0, 0.65, 0]}>
-        <spriteMaterial ref={materialRef} map={texture} transparent opacity={1} />
-      </sprite>
+      <group ref={spriteGroupRef}>
+        <sprite scale={[0.9, 1.25, 1]} position={[0, 0.65, 0]}>
+          <spriteMaterial ref={materialRef} map={texture} transparent opacity={1} />
+        </sprite>
+      </group>
       <StatusLabel
         name={labelFor(character.agentType, character.completedCount, isFixed)}
         status={character.status}

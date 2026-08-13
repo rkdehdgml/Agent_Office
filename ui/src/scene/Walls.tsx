@@ -44,11 +44,15 @@ export function Walls() {
         <meshStandardMaterial color={DIVIDER_COLOR} />
       </mesh>
 
-      {/* Row divider at z=0 (top row vs. bottom row), broken into 3 short
-          wall slivers so each column keeps a 4-wide doorway onto the shared
-          corridor band. x in [4,12] (design-publishing/break room column) is
-          left fully open — no sliver there — so the break room has no walls
-          around it at all. */}
+      {/* Row divider at z=0 (top row vs. bottom row), broken into short wall
+          slivers so each real room keeps a doorway onto the shared corridor
+          band. The break room (bottom-right cell) stays open on all sides
+          by design — the x=4 column divider's bottom segment is omitted
+          above — but design-publishing-dept (top-right cell, directly above
+          the break room) still needs its own south wall + doorway like
+          every other real room, so it gets a sliver here too (spanning
+          x in [6,10], mirroring the doorway width used for the other
+          columns). */}
       <mesh position={[-11, WALL_HEIGHT / 2, 0]}>
         <boxGeometry args={[2, WALL_HEIGHT, WALL_THICKNESS]} />
         <meshStandardMaterial color={DIVIDER_COLOR} />
@@ -59,6 +63,10 @@ export function Walls() {
       </mesh>
       <mesh position={[3, WALL_HEIGHT / 2, 0]}>
         <boxGeometry args={[2, WALL_HEIGHT, WALL_THICKNESS]} />
+        <meshStandardMaterial color={DIVIDER_COLOR} />
+      </mesh>
+      <mesh position={[8, WALL_HEIGHT / 2, 0]}>
+        <boxGeometry args={[4, WALL_HEIGHT, WALL_THICKNESS]} />
         <meshStandardMaterial color={DIVIDER_COLOR} />
       </mesh>
     </>

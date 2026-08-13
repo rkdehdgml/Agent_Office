@@ -16,16 +16,16 @@ describe("cameraPositionForTilt", () => {
     expect(z).toBeCloseTo(0, 5);
   });
 
-  it("matches the confirmed office camera position (tilt 50, azimuth 45, radius 24)", () => {
-    const [x, y, z] = cameraPositionForTilt(50, 45, 24);
-    expect(x).toBeCloseTo(13.0, 1);
-    expect(y).toBeCloseTo(15.43, 1);
-    expect(z).toBeCloseTo(13.0, 1);
+  it("matches the confirmed office camera position (tilt 50, azimuth 45, radius 30)", () => {
+    const [x, y, z] = cameraPositionForTilt(50, 45, 30);
+    expect(x).toBeCloseTo(16.25, 1);
+    expect(y).toBeCloseTo(19.28, 1);
+    expect(z).toBeCloseTo(16.25, 1);
   });
 
   it("exports the confirmed constants used by the scene", () => {
     expect(CAMERA_TILT_DEG).toBe(50);
     expect(CAMERA_AZIMUTH_DEG).toBe(45);
-    expect(CAMERA_RADIUS).toBe(24);
+    expect(CAMERA_RADIUS).toBe(30);
   });
 });

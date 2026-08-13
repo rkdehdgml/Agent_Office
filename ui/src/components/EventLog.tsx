@@ -1,4 +1,5 @@
 import type { LogEntry } from "../officeReducer";
+import { teamNameFor } from "../scene/teamLabels";
 
 export function EventLog({ entries }: { entries: LogEntry[] }) {
   const recent = entries.slice(-50).reverse();
@@ -10,7 +11,7 @@ export function EventLog({ entries }: { entries: LogEntry[] }) {
           <div key={e.id} className="event-log-row">
             <span className="log-time">{new Date(e.receivedAt).toLocaleTimeString()}</span>
             <span className="log-name">{e.hookEventName}</span>
-            <span className="log-agent">{e.agentType}</span>
+            <span className="log-agent">{teamNameFor(e.agentType)}</span>
             <span className="log-tool">{e.toolName || "-"}</span>
           </div>
         ))}

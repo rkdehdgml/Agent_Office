@@ -2,7 +2,7 @@
  * docs/superpowers/specs/2026-08-12-isometric-office-camera-design.md */
 export const CAMERA_TILT_DEG = 50;
 export const CAMERA_AZIMUTH_DEG = 45;
-export const CAMERA_RADIUS = 24;
+export const CAMERA_RADIUS = 30;
 
 export function cameraPositionForTilt(
   tiltDeg: number,

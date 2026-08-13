@@ -9,13 +9,13 @@ import { HQ_ROOM } from "../officeReducer";
 import type { OfficeState } from "../officeReducer";
 import type { WalkCommand } from "./useWalkerCommands";
 import { getFloorTexture } from "./officeTextures";
-import { CAMERA_AZIMUTH_DEG, CAMERA_TILT_DEG, cameraPositionForTilt } from "./cameraGeometry";
+import { CAMERA_AZIMUTH_DEG, CAMERA_RADIUS, CAMERA_TILT_DEG, cameraPositionForTilt } from "./cameraGeometry";
 import { TEAM_LEAD_TYPES } from "./teamLeadCharacters";
 import { useBreakRoomScheduler } from "./useBreakRoomScheduler";
 
 const DEPARTMENTS = ["research-dept", "planning-dept", "dev-dept", "design-publishing-dept", HQ_ROOM];
 
-const CAMERA_POSITION = cameraPositionForTilt(CAMERA_TILT_DEG, CAMERA_AZIMUTH_DEG, 30);
+const CAMERA_POSITION = cameraPositionForTilt(CAMERA_TILT_DEG, CAMERA_AZIMUTH_DEG, CAMERA_RADIUS);
 
 export function OfficeScene({
   state,

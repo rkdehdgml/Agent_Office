@@ -3,9 +3,9 @@ import { getShadowTexture } from "./officeTextures";
 export function Props() {
   return (
     <>
-      <Plant position={[-8, 0, -7]} />
+      <Plant position={[-11, 0, -7]} />
       <Plant position={[8, 0, 7]} />
-      <WaterCooler position={[0, 0, 6.5]} />
+      <WaterCooler position={[3, 0, 7]} />
       <Plant position={[11, 0, 7]} />
       <WaterCooler position={[5, 0, 4]} />
     </>
