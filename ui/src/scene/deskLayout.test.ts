@@ -38,7 +38,7 @@ describe("homePositionFor", () => {
           characters: Object.fromEntries(
             agentIds.map((id) => [
               id,
-              { agentId: id, agentType, status: ACTIVE, previousStatus: ACTIVE, active: true },
+              { agentId: id, agentType, status: ACTIVE, previousStatus: ACTIVE, active: true, completedCount: 0 },
             ])
           ),
         },

@@ -20,6 +20,7 @@ export interface Character {
   status: CharacterStatus;
   previousStatus: CharacterStatus;
   active: boolean;
+  completedCount: number;
 }
 
 export interface Room {
@@ -76,6 +77,7 @@ function updateCharacter(
     status: "작업 중",
     previousStatus: "작업 중",
     active: true,
+    completedCount: 0,
   };
   const updated = update(existing);
   return {
@@ -115,6 +117,7 @@ export function applyEvent(state: OfficeState, event: RawEvent): OfficeState {
         status: "출근",
         previousStatus: "출근",
         active: true,
+        completedCount: 0,
       }));
     case "PreToolUse": {
       const status = TOOL_STATUS[toolName] ?? "작업 중";
@@ -131,6 +134,7 @@ export function applyEvent(state: OfficeState, event: RawEvent): OfficeState {
         status: "완료 ✅",
         previousStatus: c.status,
         active: true,
+        completedCount: c.completedCount + 1,
       }));
     case "PostToolUseFailure":
       return updateCharacter(next, agentType, agentId, (c) => ({
