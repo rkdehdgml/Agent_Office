@@ -95,6 +95,7 @@ export const CHARACTER_FILE: Record<string, string> = {
   "planning-dept": "char_1.png",
   "dev-dept": "char_2.png",
   "design-publishing-dept": "char_3.png",
+  [HQ_ROOM]: "char_4.png",
 };
 const DEFAULT_CHARACTER_FILE = "char_5.png";
 export function characterFileFor(agentType: string): string {
@@ -102,9 +103,11 @@ export function characterFileFor(agentType: string): string {
 }
 ```
 
-`char_5.png`는 향후 팀 추가 시 다음 여유분으로 남겨둔다. 고정
-팀장/부장 캐릭터(`fixedCharacters.ts`)도 동일한 `agentType` 키를 쓰므로
-별도 매핑 없이 같은 함수를 재사용한다.
+기존 `PALETTE`가 `HQ_ROOM`에도 전용 색을 갖고 있던 것과 동일하게
+`HQ_ROOM`(본부/부장)도 전용 캐릭터 파일(`char_4.png`)을 갖는다.
+`char_5.png`는 미지의 `agentType`에 대한 폴백이자 향후 팀 추가 시
+여유분이다. 고정 팀장/부장 캐릭터(`fixedCharacters.ts`)도 동일한
+`agentType` 키를 쓰므로 별도 매핑 없이 같은 함수를 재사용한다.
 
 ## C. 애니메이션 클립 → 프레임 매핑
 
