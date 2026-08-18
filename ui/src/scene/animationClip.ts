@@ -16,3 +16,11 @@ export function animationClipFor(status: CharacterStatus, phase: WalkPhase, acti
   if (phase === "walking-to-visit" || phase === "walking-back") return "walk";
   return STATUS_CLIP[status] ?? "idle";
 }
+
+export const CLIP_FRAMES: Record<AnimationClip, readonly number[]> = {
+  idle: [1],
+  walk: [0, 1, 2, 1],
+  type: [3, 4],
+  read: [5, 6],
+  alert: [5, 6],
+};

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { animationClipFor } from "./animationClip";
+import { animationClipFor, CLIP_FRAMES } from "./animationClip";
+import type { AnimationClip } from "./animationClip";
 
 describe("animationClipFor", () => {
   it("returns 'read' for research/search statuses", () => {
@@ -33,5 +34,42 @@ describe("animationClipFor", () => {
 
   it("returns 'idle' for an inactive character even mid-walk-status", () => {
     expect(animationClipFor("작성 중 ✍️", "walking-to-visit", false)).toBe("idle");
+  });
+});
+
+describe("CLIP_FRAMES", () => {
+  const clips: AnimationClip[] = ["idle", "walk", "read", "type", "alert"];
+
+  it("defines a frame list for every animation clip", () => {
+    for (const clip of clips) {
+      expect(CLIP_FRAMES[clip]).toBeDefined();
+      expect(CLIP_FRAMES[clip].length).toBeGreaterThan(0);
+    }
+  });
+
+  it("keeps every frame index within the 0-6 sprite sheet range", () => {
+    for (const clip of clips) {
+      for (const frame of CLIP_FRAMES[clip]) {
+        expect(frame).toBeGreaterThanOrEqual(0);
+        expect(frame).toBeLessThanOrEqual(6);
+      }
+    }
+  });
+
+  it("cycles the walk clip through a 4-step ping-pong of frames 0-2", () => {
+    expect(CLIP_FRAMES.walk).toEqual([0, 1, 2, 1]);
+  });
+
+  it("holds idle on the resting mid-walk frame", () => {
+    expect(CLIP_FRAMES.idle).toEqual([1]);
+  });
+
+  it("alternates type between frames 3 and 4", () => {
+    expect(CLIP_FRAMES.type).toEqual([3, 4]);
+  });
+
+  it("alternates read and alert between frames 5 and 6", () => {
+    expect(CLIP_FRAMES.read).toEqual([5, 6]);
+    expect(CLIP_FRAMES.alert).toEqual([5, 6]);
   });
 });
