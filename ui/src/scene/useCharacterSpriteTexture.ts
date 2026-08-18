@@ -35,16 +35,33 @@ export function useCharacterSpriteTexture(image: HTMLImageElement, clip: Animati
     const ctx = canvasRef.current!.getContext("2d")!;
     const frames = CLIP_FRAMES[clip];
     stepRef.current = 0;
-    drawCharacterFrame(ctx, image, frames[0]);
-    texture.needsUpdate = true;
 
-    if (frames.length <= 1) return;
-    const id = setInterval(() => {
-      stepRef.current = (stepRef.current + 1) % frames.length;
+    const drawCurrentFrame = () => {
       drawCharacterFrame(ctx, image, frames[stepRef.current]);
       texture.needsUpdate = true;
+    };
+
+    drawCurrentFrame();
+
+    // `image` (from characterImageFor()) loads asynchronously, so the draw
+    // above can run before it has decoded — leaving the canvas blank. Redraw
+    // once loading finishes so the sprite always ends up visible, even for
+    // single-frame clips (e.g. "idle") that never start an interval below.
+    if (!image.complete) {
+      image.addEventListener("load", drawCurrentFrame);
+    }
+
+    if (frames.length <= 1) {
+      return () => image.removeEventListener("load", drawCurrentFrame);
+    }
+    const id = setInterval(() => {
+      stepRef.current = (stepRef.current + 1) % frames.length;
+      drawCurrentFrame();
     }, FRAME_INTERVAL_MS);
-    return () => clearInterval(id);
+    return () => {
+      clearInterval(id);
+      image.removeEventListener("load", drawCurrentFrame);
+    };
   }, [image, clip, texture]);
 
   return texture;
