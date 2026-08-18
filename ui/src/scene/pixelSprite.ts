@@ -1,34 +1,19 @@
 export const SPRITE_WIDTH = 16;
-export const SPRITE_HEIGHT = 22;
+export const SPRITE_HEIGHT = 32;
 
-export interface CharacterPalette {
-  body: string;
-  hair: string;
-  skin: string;
-  pants: string;
-}
+const RIGHT_ROW_Y = 64;
 
 /**
- * Two walk frames (legs alternate) plus a static idle/read/type/alert pose
- * (frame 0) are enough for the current animation set — see animationClip.ts.
+ * Crops one 16x32 frame out of a pixel-agents char_N.png sprite sheet
+ * (112x96: 3 direction rows x 7 frames) and draws it into ctx. Only the
+ * "right" direction row is used — see the Phase 1 design spec for why
+ * directional facing is out of scope this pass.
  */
-export function drawCharacterFrame(ctx: CanvasRenderingContext2D, palette: CharacterPalette, frame: 0 | 1): void {
+export function drawCharacterFrame(ctx: CanvasRenderingContext2D, img: HTMLImageElement, frameIndex: number): void {
   ctx.clearRect(0, 0, SPRITE_WIDTH, SPRITE_HEIGHT);
-  const px = (x: number, y: number, w: number, h: number, color: string) => {
-    ctx.fillStyle = color;
-    ctx.fillRect(x, y, w, h);
-  };
-  px(4, 0, 8, 2, palette.hair);
-  px(5, 2, 6, 4, palette.skin);
-  px(3, 6, 10, 8, palette.body);
-  const armSwing = frame === 1 ? 1 : 0;
-  px(1, 7 + armSwing, 2, 6, palette.skin);
-  px(13, 7 + (1 - armSwing), 2, 6, palette.skin);
-  if (frame === 0) {
-    px(4, 14, 3, 7, palette.pants);
-    px(9, 14, 3, 7, palette.pants);
-  } else {
-    px(3, 14, 3, 8, palette.pants);
-    px(10, 14, 3, 6, palette.pants);
-  }
+  ctx.drawImage(
+    img,
+    frameIndex * SPRITE_WIDTH, RIGHT_ROW_Y, SPRITE_WIDTH, SPRITE_HEIGHT,
+    0, 0, SPRITE_WIDTH, SPRITE_HEIGHT,
+  );
 }
