@@ -60,41 +60,20 @@ Claude Code에서 실행되는 AI 에이전트(메인 스레드 + 서브에이�
 
 ## 픽셀아트 에셋 교체
 
-현재 UI는 절차적으로 생성된 플레이스홀더 픽셀아트를 사용합니다. 아래는 향후 실제 무료 에셋 팩으로 교체하는
-수동 절차입니다. 모든 다운로드는 itch.io 및 kenney.nl에서 이루어지며, 코드 변경이 필요한 부분은 명시되어 있습니다.
+**캐릭터 스프라이트는 완료됨.** 캐릭터는 더 이상 절차적 플레이스홀더가 아니라
+[pixel-agents](https://github.com/pixel-agents-hq/pixel-agents) 프로젝트가 번들로
+제공하는 실제 PNG 스프라이트(`ui/public/pixel-agents-assets/characters/char_0.png`~`char_5.png`)를
+사용합니다. 팀/부서 구분은 캐릭터 색이 아니라 이름표(명찰)의 팀명·직급 텍스트로
+표시하며, 부서별 캐릭터 재염색은 하지 않습니다. 자세한 배경, 프레임 격자, 팀→파일
+매칭, 애니메이션 클립 매핑은
+[`docs/superpowers/specs/2026-08-18-pixel-agents-character-integration-design.md`](docs/superpowers/specs/2026-08-18-pixel-agents-character-integration-design.md)를
+참고하세요.
+
+아래 절차는 이 브랜치와 무관하게 아직 남아 있는 항목입니다.
 
 ### 절차
 
-1. **MetroCity 캐릭터 팩 다운로드**
-   - https://jik-a-4.itch.io/metrocity-free-topdown-character-pack 에서 "Download Now" 클릭
-   - "No thanks, just take me to the downloads" 선택 (선택사항 결제 건너뛰기)
-   - ZIP 파일 저장
-
-2. **같은 작가의 인테리어 팩 다운로드**
-   - itch.io에서 "JIK-A-4 top down interior" 검색 (캐릭터 팩 페이지에서도 링크됨)
-   - 해당 팩 다운로드 및 저장
-
-3. **스프라이트 시트 추출**
-   - `ui/public/` 디렉터리가 아직 없다면 새로 생성
-   - 캐릭터 스프라이트 PNG → `ui/public/sprites/characters/` (디렉터리 생성 후 저장)
-   - 인테리어 타일 PNG → `ui/public/sprites/interior/` (디렉터리 생성 후 저장)
-
-4. **pixelSprite.ts의 drawCharacterFrame 함수 업데이트**
-   - 파일: `ui/src/scene/pixelSprite.ts`
-   - 현재: 절차적 `fillRect` 블록 사용
-   - 변경: 실제 스프라이트 시트에서 `drawImage` 크롭으로 변경
-   - 이미지 뷰어에서 PNG를 열어 프레임 그리드 크기 확인 (MetroCity 시트는 보통 애니메이션 방향별 고정 행 레이아웃)
-   - **이미지 로딩은 비동기**: `new Image()`의 `src`가 로드되기 전에 `drawImage`를 호출하면 아무것도 그려지지 않고 이후에도 다시 그려지지 않습니다. 스프라이트 시트 이미지를 모듈 스코프에서 한 번만 로드하고, `img.onload`에서 (이미 그려진 프레임이 있다면) 다시 그린 뒤 텍스처의 `needsUpdate = true`를 설정하세요.
-   - **시그니처 변경 필요**: 현재 `(ctx, palette, frame: 0 | 1) => void`에는 애니메이션 종류(clip) 구분이 없어 읽기/쓰기/경고 등 서로 다른 모션을 표현할 수 없습니다. 디자인 문서의 애니메이션 표를 실제로 구현하려면 `clip: AnimationClip` 매개변수를 추가하고, 유일한 호출부인 `ui/src/scene/useCharacterSpriteTexture.ts`도 함께 수정해야 합니다.
-
-5. **부서별 색상 틴트 처리**
-   - 현재: 절차적 팔레트 생성 (단일 템플릿만 존재)
-   - 변경: 스프라이트 그린 후 `ctx.globalCompositeOperation = "multiply"` 설정
-   - 부서 색상으로 오버레이 채우기
-   - 합성 모드 초기화
-   - 결과: 단일 실제 스프라이트 시트로 다섯 부서(연구·기획·디자인퍼블리싱·개발팀 + 본부) 모두 지원
-
-6. **사운드 효과 추가**
+1. **사운드 효과 추가**
    - Kenney의 무료 CC0 UI 오디오 팩 다운로드: https://kenney.nl/assets/ui-audio
    - 3개 짧은 클립 선택 및 저장:
      - `ui/public/sfx/complete.mp3`
@@ -102,6 +81,16 @@ Claude Code에서 실행되는 AI 에이전트(메인 스레드 + 서브에이�
      - `ui/public/sfx/leave.mp3`
    - 코드 변경 불필요: `ui/src/audio/playSound.ts`는 이미 이 경로들을 가리킴
 
-7. **크레딧 추가**
-   - README 또는 적절한 크레딧 파일에 다음 줄 추가:
-     > Character/interior art by JIK-A-4 (MetroCity, free). UI sound effects by Kenney (kenney.nl, CC0).
+2. **크레딧**
+   - 캐릭터 아트: pixel-agents (MIT) — 자세한 라이선스 전문은
+     [`ui/public/pixel-agents-assets/ATTRIBUTION.md`](ui/public/pixel-agents-assets/ATTRIBUTION.md) 참고.
+   - UI 사운드 효과: Kenney (kenney.nl, CC0) — 위 1번 절차를 완료하면 아래 줄을 추가:
+     > UI sound effects by Kenney (kenney.nl, CC0).
+
+### 남은 작업 (별도 단계)
+
+바닥/벽(배경) 아트 교체는 아직 진행되지 않았고 별도의 향후 단계(Phase 2)로 남아
+있습니다. 설계 문서의 방향에 따르면 이 작업 역시 MetroCity 인테리어 팩이 아니라
+pixel-agents 자체 번들의 바닥/벽 애셋(`floor_N.png`/`wall_N.png`)을 사용할
+예정이며, 벽은 인접 감지 기반 비트마스크 오토타일링이 필요해 별도 설계가 필요합니다.
+구체적인 절차는 이 README가 아니라 Phase 2 전용 설계 문서에서 다룹니다.

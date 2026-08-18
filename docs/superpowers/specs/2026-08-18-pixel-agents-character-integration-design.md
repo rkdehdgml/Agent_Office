@@ -96,7 +96,7 @@ export const CHARACTER_FILE: Record<string, string> = {
   "dev-dept": "char_2.png",
   "design-publishing-dept": "char_3.png",
 };
-const DEFAULT_CHARACTER_FILE = "char_4.png";
+const DEFAULT_CHARACTER_FILE = "char_5.png";
 export function characterFileFor(agentType: string): string {
   return CHARACTER_FILE[agentType] ?? DEFAULT_CHARACTER_FILE;
 }
@@ -118,6 +118,10 @@ pixel-agents의 프레임 역할(걷기 0-2, 타이핑 3-4, 읽기 5-6)을 기�
 | `type` | 3, 4 | 2프레임 alternate, 220ms 간격 |
 | `read` | 5, 6 | 2프레임 alternate, 220ms 간격 |
 | `alert` | 5, 6 | `read`와 동일 프레임 + 스프라이트 테두리 강조색으로 구분 (pixel-agents에 대응 프레임 없음) |
+
+> 구현 결과: `alert`의 테두리 강조색 구분은 Phase 1 구현 계획에서 YAGNI로
+> 판단해 드롭했다. 현재 `alert`는 `read`와 프레임이 완전히 동일하게
+> 렌더링되며, 상태 텍스트(라벨)로만 구분된다.
 
 `useCharacterSpriteTexture.ts`는 지금 `clip === "walk"`일 때만 인터벌을
 돌리던 조건을 `clip !== "idle"`(즉 walk/type/read/alert 전부)로 넓히고,
@@ -162,7 +166,7 @@ const CLIP_FRAMES: Record<AnimationClip, readonly number[]> = {
 
 신규:
 - `ui/src/scene/characterSprites.ts` — `characterFileFor`, 이미지 프리로드
-  캐시, `BADGE_ACCENT_COLOR` + 유닛 테스트
+  캐시 + 유닛 테스트
 
 애셋(이미 다운로드 완료, 커밋 필요):
 - `ui/public/pixel-agents-assets/characters/char_0.png`~`char_5.png`
