@@ -1,6 +1,9 @@
 # Attribution
 
-The files under `characters/` (`char_0.png`–`char_5.png`) are character sprite assets from the [pixel-agents](https://github.com/pixel-agents-hq/pixel-agents) project, used under its MIT license.
+The files under `characters/` (`char_0.png`–`char_5.png`), `floors/`
+(`floor_0.png`–`floor_8.png`), and `walls/` (`wall_0.png`) are sprite
+assets from the [pixel-agents](https://github.com/pixel-agents-hq/pixel-agents)
+project, used under its MIT license.
 
 ## MIT License
 

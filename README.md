@@ -69,6 +69,14 @@ Claude Code에서 실행되는 AI 에이전트(메인 스레드 + 서브에이�
 [`docs/superpowers/specs/2026-08-18-pixel-agents-character-integration-design.md`](docs/superpowers/specs/2026-08-18-pixel-agents-character-integration-design.md)를
 참고하세요.
 
+**바닥/벽도 완료됨.** 바닥은 `floor_0.png`/`floor_1.png` 실제 이미지를
+기존 2×2 체커보드 반복 파이프라인에 사용하고, 벽은 pixel-agents 원본과
+동일한 인접 감지 기반 16종 비트마스크 오토타일링을 적용해
+`wall_0.png`에서 조각을 크롭한 텍스처로 렌더링합니다. 그리드 모델,
+비트마스크 계산, 셀 렌더링 방식은
+[`docs/superpowers/specs/2026-08-18-pixel-agents-background-integration-design.md`](docs/superpowers/specs/2026-08-18-pixel-agents-background-integration-design.md)를
+참고하세요.
+
 아래 절차는 이 브랜치와 무관하게 아직 남아 있는 항목입니다.
 
 ### 절차
@@ -84,13 +92,6 @@ Claude Code에서 실행되는 AI 에이전트(메인 스레드 + 서브에이�
 2. **크레딧**
    - 캐릭터 아트: pixel-agents (MIT) — 자세한 라이선스 전문은
      [`ui/public/pixel-agents-assets/ATTRIBUTION.md`](ui/public/pixel-agents-assets/ATTRIBUTION.md) 참고.
+   - 바닥/벽 아트: pixel-agents (MIT) — 위와 동일한 `ATTRIBUTION.md` 참고.
    - UI 사운드 효과: Kenney (kenney.nl, CC0) — 위 1번 절차를 완료하면 아래 줄을 추가:
      > UI sound effects by Kenney (kenney.nl, CC0).
-
-### 남은 작업 (별도 단계)
-
-바닥/벽(배경) 아트 교체는 아직 진행되지 않았고 별도의 향후 단계(Phase 2)로 남아
-있습니다. 설계 문서의 방향에 따르면 이 작업 역시 MetroCity 인테리어 팩이 아니라
-pixel-agents 자체 번들의 바닥/벽 애셋(`floor_N.png`/`wall_N.png`)을 사용할
-예정이며, 벽은 인접 감지 기반 비트마스크 오토타일링이 필요해 별도 설계가 필요합니다.
-구체적인 절차는 이 README가 아니라 Phase 2 전용 설계 문서에서 다룹니다.
