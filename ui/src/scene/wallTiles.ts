@@ -1,4 +1,4 @@
-import { CanvasTexture, NearestFilter } from "three";
+import { CanvasTexture, NearestFilter, SRGBColorSpace } from "three";
 
 export interface WallRect {
   x0: number; // 셀 좌표, inclusive
@@ -8,11 +8,11 @@ export interface WallRect {
 }
 
 export const WALL_RECTS: WallRect[] = [
-  // 외곽 둘레
-  { x0: -12, x1: 12, z0: -8, z1: -7 }, // 상단
-  { x0: -12, x1: 12, z0: 7, z1: 8 }, // 하단
-  { x0: -12, x1: -11, z0: -8, z1: 8 }, // 좌측
-  { x0: 11, x1: 12, z0: -8, z1: 8 }, // 우측
+  // 외곽 둘레 (floor footprint x∈[-12,12], z∈[-8,8]의 바깥쪽 한 칸 링)
+  { x0: -12, x1: 12, z0: -9, z1: -8 }, // 상단
+  { x0: -12, x1: 12, z0: 8, z1: 9 }, // 하단
+  { x0: -13, x1: -12, z0: -9, z1: 9 }, // 좌측
+  { x0: 12, x1: 13, z0: -9, z1: 9 }, // 우측
 
   // 세로 칸막이 x=-4 (연구/개발 vs 기획/본부), 중앙 통로 z∈[-2,2) 개방
   { x0: -4, x1: -3, z0: -8, z1: -2 },
@@ -28,8 +28,8 @@ export const WALL_RECTS: WallRect[] = [
   { x0: 6, x1: 10, z0: 0, z1: 1 },
 ];
 
-const GRID_WIDTH = 24;
-const GRID_HEIGHT = 16;
+const GRID_WIDTH = 26;
+const GRID_HEIGHT = 18;
 
 export function buildWallGrid(rects: WallRect[]): boolean[][] {
   const grid: boolean[][] = Array.from({ length: GRID_HEIGHT }, () =>
@@ -38,8 +38,8 @@ export function buildWallGrid(rects: WallRect[]): boolean[][] {
   for (const rect of rects) {
     for (let cz = rect.z0; cz < rect.z1; cz += 1) {
       for (let cx = rect.x0; cx < rect.x1; cx += 1) {
-        const gx = cx + 12;
-        const gz = cz + 8;
+        const gx = cx + 13;
+        const gz = cz + 9;
         if (gx >= 0 && gx < GRID_WIDTH && gz >= 0 && gz < GRID_HEIGHT) {
           grid[gz][gx] = true;
         }
@@ -127,6 +127,7 @@ export function getWallTileTexture(mask: number): CanvasTexture {
   drawWallTile(canvas, mask);
 
   const texture = new CanvasTexture(canvas);
+  texture.colorSpace = SRGBColorSpace;
   texture.magFilter = NearestFilter;
   texture.minFilter = NearestFilter;
   wallTileCache.set(mask, texture);

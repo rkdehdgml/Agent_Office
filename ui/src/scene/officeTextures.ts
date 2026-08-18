@@ -3,11 +3,18 @@ import { TILE_SIZE, drawDeskTopTile } from "./pixelTile";
 
 const FLOOR_ASSET_BASE = "/pixel-agents-assets/floors/";
 const FLOOR_FILES = ["floor_0.png", "floor_1.png"];
-const floorImages: HTMLImageElement[] = FLOOR_FILES.map((file) => {
-  const img = new Image();
-  img.src = `${FLOOR_ASSET_BASE}${file}`;
-  return img;
-});
+let floorImagesInstance: HTMLImageElement[] | null = null;
+
+function floorImages(): HTMLImageElement[] {
+  if (!floorImagesInstance) {
+    floorImagesInstance = FLOOR_FILES.map((file) => {
+      const img = new Image();
+      img.src = `${FLOOR_ASSET_BASE}${file}`;
+      return img;
+    });
+  }
+  return floorImagesInstance;
+}
 
 let floorTexture: CanvasTexture | null = null;
 let floorCanvas: HTMLCanvasElement | null = null;
@@ -17,7 +24,7 @@ function drawFloorCanvas(): void {
   ctx.imageSmoothingEnabled = false;
   for (let row = 0; row < 2; row++) {
     for (let col = 0; col < 2; col++) {
-      const img = floorImages[(row + col) % 2];
+      const img = floorImages()[(row + col) % 2];
       ctx.drawImage(img, col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
     }
   }
@@ -40,7 +47,7 @@ export function getFloorTexture(): CanvasTexture {
 
   // floor_0.png/floor_1.png load asynchronously (see Global Constraints),
   // so redraw once each finishes in case the initial draw above ran first.
-  for (const img of floorImages) {
+  for (const img of floorImages()) {
     if (!img.complete) {
       img.addEventListener("load", () => {
         drawFloorCanvas();

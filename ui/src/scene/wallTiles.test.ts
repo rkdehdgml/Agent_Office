@@ -1,21 +1,24 @@
 import { describe, expect, it } from "vitest";
-import { WALL_GRID, WALL_RECTS, bitmaskAt, buildWallGrid, listWallCells } from "./wallTiles";
+import { WALL_GRID, bitmaskAt, buildWallGrid, listWallCells } from "./wallTiles";
 
 describe("buildWallGrid", () => {
-  it("rasterizes WALL_RECTS into exactly 102 wall cells (76 outer + 26 interior)", () => {
-    expect(listWallCells(WALL_GRID).length).toBe(102);
+  it("rasterizes WALL_RECTS into exactly 114 wall cells (84 outer + 30 interior)", () => {
+    expect(listWallCells(WALL_GRID).length).toBe(114);
   });
 
   it("leaves the central corridor cell (world x=0, z=0) open", () => {
-    // gx = 0 - (-12) = 12, gz = 0 - (-8) = 8
-    expect(WALL_GRID[8][12]).toBe(false);
+    // gx = 0 + 13 = 13, gz = 0 + 9 = 9
+    expect(WALL_GRID[9][13]).toBe(false);
   });
 
-  it("marks the top-left perimeter corner (world x=-12, z=-8) as wall", () => {
+  it("marks the top-left perimeter corner (world x=-13, z=-9) as wall", () => {
+    // The perimeter ring now sits one cell outside the floor footprint, so the
+    // grid's (0,0) corner is world (-13,-9); world (-12,-8) is open floor.
     expect(WALL_GRID[0][0]).toBe(true);
+    expect(WALL_GRID[1][1]).toBe(false);
   });
 
-  it("ignores rects that fall outside the 24x16 grid without throwing", () => {
+  it("ignores rects that fall outside the 26x18 grid without throwing", () => {
     const grid = buildWallGrid([{ x0: 100, x1: 101, z0: 100, z1: 101 }]);
     expect(listWallCells(grid).length).toBe(0);
   });
@@ -62,8 +65,8 @@ describe("bitmaskAt", () => {
     expect(bitmaskAt(WALL_GRID, 0, 0)).toBe(2 | 4);
   });
 
-  it("WALL_RECTS produces a grid whose true-cell count matches its own rect areas minus overlaps", () => {
-    // Sanity cross-check: rebuilding from the exported rects gives the same grid.
-    expect(buildWallGrid(WALL_RECTS)).toEqual(WALL_GRID);
+  it("has the expected grid dimensions (18 rows x 26 cols)", () => {
+    expect(WALL_GRID.length).toBe(18);
+    expect(WALL_GRID[0].length).toBe(26);
   });
 });

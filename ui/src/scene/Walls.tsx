@@ -9,7 +9,7 @@ export function Walls() {
   return (
     <>
       {cells.map(({ gx, gz, mask }) => (
-        <mesh key={`${gx},${gz}`} position={[gx - 11.5, WALL_HEIGHT / 2, gz - 7.5]}>
+        <mesh key={`${gx},${gz}`} position={[gx - 12.5, WALL_HEIGHT / 2, gz - 8.5]}>
           <boxGeometry args={[1, WALL_HEIGHT, 1]} />
           <meshStandardMaterial map={getWallTileTexture(mask)} />
         </mesh>
