@@ -1,3 +1,5 @@
+import { CanvasTexture, NearestFilter } from "three";
+
 export interface WallRect {
   x0: number; // 셀 좌표, inclusive
   x1: number; // 셀 좌표, exclusive
@@ -76,4 +78,72 @@ export function listWallCells(grid: boolean[][]): WallCell[] {
     }
   }
   return cells;
+}
+
+const WALL_ASSET_PATH = "/pixel-agents-assets/walls/wall_0.png";
+const WALL_PIECE_WIDTH = 16;
+const WALL_PIECE_HEIGHT = 32;
+
+let wallImageInstance: HTMLImageElement | null = null;
+
+export function wallImage(): HTMLImageElement {
+  if (!wallImageInstance) {
+    wallImageInstance = new Image();
+    wallImageInstance.src = WALL_ASSET_PATH;
+  }
+  return wallImageInstance;
+}
+
+function drawWallTile(canvas: HTMLCanvasElement, mask: number): void {
+  const ctx = canvas.getContext("2d")!;
+  const img = wallImage();
+  const col = mask % 4;
+  const row = Math.floor(mask / 4);
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0, 0, WALL_PIECE_WIDTH, WALL_PIECE_HEIGHT);
+  ctx.drawImage(
+    img,
+    col * WALL_PIECE_WIDTH,
+    row * WALL_PIECE_HEIGHT,
+    WALL_PIECE_WIDTH,
+    WALL_PIECE_HEIGHT,
+    0,
+    0,
+    WALL_PIECE_WIDTH,
+    WALL_PIECE_HEIGHT,
+  );
+}
+
+const wallTileCache = new Map<number, CanvasTexture>();
+let wallLoadListenerAttached = false;
+
+export function getWallTileTexture(mask: number): CanvasTexture {
+  const cached = wallTileCache.get(mask);
+  if (cached) return cached;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = WALL_PIECE_WIDTH;
+  canvas.height = WALL_PIECE_HEIGHT;
+  drawWallTile(canvas, mask);
+
+  const texture = new CanvasTexture(canvas);
+  texture.magFilter = NearestFilter;
+  texture.minFilter = NearestFilter;
+  wallTileCache.set(mask, texture);
+
+  // wall_0.png loads asynchronously (see Global Constraints), so the draw
+  // above can run before it has decoded, leaving the tile blank. Redraw
+  // every cached tile once loading finishes.
+  const img = wallImage();
+  if (!img.complete && !wallLoadListenerAttached) {
+    wallLoadListenerAttached = true;
+    img.addEventListener("load", () => {
+      for (const [cachedMask, cachedTexture] of wallTileCache) {
+        drawWallTile(cachedTexture.image as HTMLCanvasElement, cachedMask);
+        cachedTexture.needsUpdate = true;
+      }
+    });
+  }
+
+  return texture;
 }
