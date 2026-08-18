@@ -1,24 +1,15 @@
 import { useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import type { Group, SpriteMaterial } from "three";
-import { HQ_ROOM } from "../officeReducer";
 import type { Character } from "../officeReducer";
 import type { Vec2 } from "./deskLayout";
 import type { WalkCommand } from "./useWalkerCommands";
 import { animationClipFor } from "./animationClip";
 import { useCharacterSpriteTexture } from "./useCharacterSpriteTexture";
+import { characterImageFor } from "./characterSprites";
 import { StatusLabel } from "./StatusLabel";
 import { getShadowTexture } from "./officeTextures";
 import { labelFor } from "./officeLabel";
-
-const PALETTE: Record<string, { body: string; hair: string; skin: string; pants: string }> = {
-  "research-dept": { body: "#3d7ea6", hair: "#3a2a20", skin: "#e8b98a", pants: "#26333d" },
-  "planning-dept": { body: "#8a5cc2", hair: "#241a2e", skin: "#f0c9a0", pants: "#2e2438" },
-  "dev-dept": { body: "#3fae6a", hair: "#1c1c1c", skin: "#e0ab7c", pants: "#22331f" },
-  "design-publishing-dept": { body: "#c2547e", hair: "#2a1a20", skin: "#e8b98a", pants: "#3a2430" },
-  [HQ_ROOM]: { body: "#b08d57", hair: "#3a2a20", skin: "#e8b98a", pants: "#4a3a28" },
-};
-const DEFAULT_PALETTE = { body: "#8a8a8a", hair: "#2b2b2b", skin: "#d8b48a", pants: "#3a3a3a" };
 
 const WALK_SPEED = 4; // units per second
 const GREETING_DURATION_MS = 1500;
@@ -54,7 +45,7 @@ export function CharacterActor({
   const materialRef = useRef<SpriteMaterial>(null);
 
   const key = `${character.agentType}/${character.agentId}`;
-  const palette = PALETTE[character.agentType] ?? DEFAULT_PALETTE;
+  const characterImage = characterImageFor(character.agentType);
 
   useFrame((_, delta) => {
     const now = performance.now();
@@ -159,7 +150,7 @@ export function CharacterActor({
   });
 
   const clip = animationClipFor(character.status, renderPhase, character.active);
-  const texture = useCharacterSpriteTexture(palette, clip);
+  const texture = useCharacterSpriteTexture(characterImage, clip);
 
   return (
     <group ref={groupRef} position={[home.x, 0, home.z]}>
@@ -168,7 +159,7 @@ export function CharacterActor({
         <meshBasicMaterial map={getShadowTexture()} transparent depthWrite={false} />
       </mesh>
       <group ref={spriteGroupRef}>
-        <sprite scale={[0.9, 1.25, 1]} position={[0, 0.65, 0]}>
+        <sprite scale={[0.9, 1.8, 1]} position={[0, 0.9, 0]}>
           <spriteMaterial ref={materialRef} map={texture} transparent opacity={1} />
         </sprite>
       </group>
