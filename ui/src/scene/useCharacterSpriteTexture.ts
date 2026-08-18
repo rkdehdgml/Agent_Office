@@ -29,15 +29,13 @@ export function useCharacterSpriteTexture(image: HTMLImageElement, clip: Animati
     return tex;
   }, []);
 
-  const stepRef = useRef(0);
-
   useEffect(() => {
     const ctx = canvasRef.current!.getContext("2d")!;
     const frames = CLIP_FRAMES[clip];
-    stepRef.current = 0;
+    let step = 0;
 
     const drawCurrentFrame = () => {
-      drawCharacterFrame(ctx, image, frames[stepRef.current]);
+      drawCharacterFrame(ctx, image, frames[step]);
       texture.needsUpdate = true;
     };
 
@@ -55,7 +53,7 @@ export function useCharacterSpriteTexture(image: HTMLImageElement, clip: Animati
       return () => image.removeEventListener("load", drawCurrentFrame);
     }
     const id = setInterval(() => {
-      stepRef.current = (stepRef.current + 1) % frames.length;
+      step = (step + 1) % frames.length;
       drawCurrentFrame();
     }, FRAME_INTERVAL_MS);
     return () => {

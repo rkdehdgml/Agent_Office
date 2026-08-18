@@ -1,6 +1,6 @@
 import { HQ_ROOM } from "../officeReducer";
 
-export const CHARACTER_FILE: Record<string, string> = {
+const CHARACTER_FILE: Record<string, string> = {
   "research-dept": "char_0.png",
   "planning-dept": "char_1.png",
   "dev-dept": "char_2.png",
