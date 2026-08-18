@@ -40,7 +40,8 @@ pixel-agents 자체 소스(`core/src/assets/{constants.ts,pngDecoder.ts}`,
 - 팀(부서) → 캐릭터 파일 고정 매칭으로 `PALETTE` 재염색 방식 대체
 - `walk`/`idle`/`type`/`read`/`alert` 다섯 애니메이션 클립 전부에 pixel-agents
   프레임을 매핑 (지금은 `walk`만 2프레임 alternate, 나머지는 정지)
-- `StatusLabel`에 팀명·직급 배지 줄 추가 (명찰 표시)
+- (확인만) 팀·직급 명찰 표시는 기존 `labelFor`/`StatusLabel`이 이미 처리 —
+  캐릭터 아트 교체 후에도 그대로 동작하는지 수동 확인만 한다
 
 범위 밖:
 - 바닥(`floor_N.png`)/벽(`wall_N.png`) 애셋 교체 — 2단계로 분리, 별도
@@ -133,35 +134,20 @@ const CLIP_FRAMES: Record<AnimationClip, readonly number[]> = {
 };
 ```
 
-## D. 팀·직급 명찰(배지)
+## D. 팀·직급 명찰 — 이미 구현되어 있음 (변경 없음)
 
-`StatusLabel`에 `agentType: string`, `completedCount: number` props를
-추가하고, 기존 이름/상태 사이에 배지 줄을 넣는다.
+계획 작성 단계에서 코드를 다시 확인한 결과, `officeLabel.ts`의
+`labelFor(agentType, completedCount, isFixed)`가 이미
+`"{팀명} · {직급}"` 문자열을 만들어 `CharacterActor.tsx`에서
+`StatusLabel`의 `name` prop으로 넘기고 있다([[2026-08-13-office-ranks-teams-departments-design]]에서
+구현됨). 즉 "캐릭터 색으로 구분이 안 되니 명찰로 팀/직급을 표시해달라"는
+요구사항은 **이미 충족되어 있다** — pixel-agents 아트로 캐릭터를 바꿔도
+이 라벨 표시 자체는 그대로 유지되므로 Phase 1에서 `StatusLabel`/`App.css`를
+건드릴 필요가 없다.
 
-```tsx
-<div className="office-label">
-  <div className="office-label__name">{name}</div>
-  <div className="office-label__badge">{teamNameFor(agentType)} · {rankFor(completedCount)}</div>
-  <div className="office-label__status">{status}</div>
-</div>
-```
-
-`teamNameFor`(`teamLabels.ts`)와 `rankFor`(`rank.ts`)는 기존 함수를
-그대로 재사용한다 — 신규 함수 불필요. 고정 팀장/부장 캐릭터는 지금처럼
-`"팀장"`/`"부장"` 고정 라벨을 배지 자리에 쓴다.
-
-`App.css`에 `.office-label__badge` 클래스를 추가한다. 팀 구분을 배지에서
-시각적으로 유지하기 위해, 기존 `PALETTE.body` 색상표를 그대로
-`BADGE_ACCENT_COLOR: Record<string, string>`로 옮겨 배지 텍스트/테두리
-강조색으로 재사용한다(캐릭터 자체 재염색은 더 이상 하지 않음).
-
-```css
-.office-label__badge {
-  font-size: 10px;
-  opacity: 0.9;
-  margin: 1px 0;
-}
-```
+캐릭터 색상으로 팀을 구분하던 것(`PALETTE.body` 등)을 제거해도, 라벨에
+이미 팀명이 텍스트로 노출되므로 별도의 배지 강조색을 새로 만들 필요는
+없다(YAGNI) — `PALETTE`는 대체 없이 제거한다.
 
 ## 변경/신규 파일 요약
 
@@ -171,11 +157,8 @@ const CLIP_FRAMES: Record<AnimationClip, readonly number[]> = {
 - `ui/src/scene/useCharacterSpriteTexture.ts` — 프레임 갱신 조건/인덱스를
   클립별 프레임 배열 기반으로 확장
 - `ui/src/scene/animationClip.ts` — `CLIP_FRAMES` 테이블 추가
-- `ui/src/scene/CharacterActor.tsx` — `PALETTE` 제거, `characterFileFor` +
-  `BADGE_ACCENT_COLOR` 사용, `StatusLabel`에 `agentType`/`completedCount`
-  전달
-- `ui/src/scene/StatusLabel.tsx` — 배지 줄 추가
-- `ui/src/App.css` — `.office-label__badge` 스타일 추가
+- `ui/src/scene/CharacterActor.tsx` — `PALETTE` 제거, `characterFileFor`
+  사용 (`StatusLabel` 호출부는 변경 없음 — 기존 `labelFor` 그대로 사용)
 
 신규:
 - `ui/src/scene/characterSprites.ts` — `characterFileFor`, 이미지 프리로드
